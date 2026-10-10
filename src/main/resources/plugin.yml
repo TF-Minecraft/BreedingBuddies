@@ -1,12 +1,12 @@
 main: net.tfminecraft.breedingbuddies.BreedingBuddies
-api-version: 1.20
+api-version: '1.21.10'
 name: BreedingBuddies
-version: 1.0
+version: ${project.version}
 author: Nowko
 depend: [MMOItems, MythicLib]
 commands:
   breedingbuddies:
-    description: Main command for BreedingBuddies plugi
+    description: Main command for the BreedingBuddies plugin.
     usage: /<command> <subcommand>
     permission: breedingbuddies.use
     permission-message: You do not have permission to use this command.

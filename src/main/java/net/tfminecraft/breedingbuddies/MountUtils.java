@@ -23,7 +23,7 @@ public class MountUtils {
      * Establece la vida máxima y actual
      */
     public static void setMaxHealth(LivingEntity entity, double health) {
-        AttributeInstance attr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        AttributeInstance attr = entity.getAttribute(Attribute.MAX_HEALTH);
         if (attr != null) {
             attr.setBaseValue(health);
             entity.setHealth(Math.min(health, entity.getHealth())); // ajusta si la salud actual es mayor que el máximo
@@ -34,7 +34,7 @@ public class MountUtils {
      * Establece la velocidad de movimiento
      */
     public static void setSpeed(LivingEntity entity, double speed) {
-        AttributeInstance attr = entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+        AttributeInstance attr = entity.getAttribute(Attribute.MOVEMENT_SPEED);
         if (attr != null) {
             attr.setBaseValue(speed);
         }
@@ -63,7 +63,7 @@ public class MountUtils {
      * Obtiene la velocidad base
      */
     public static double getSpeed(LivingEntity entity) {
-        AttributeInstance attr = entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+        AttributeInstance attr = entity.getAttribute(Attribute.MOVEMENT_SPEED);
         return attr != null ? attr.getBaseValue() : -1;
     }
 
@@ -71,7 +71,7 @@ public class MountUtils {
      * Obtiene la vida máxima
      */
     public static double getMaxHealth(LivingEntity entity) {
-        AttributeInstance attr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        AttributeInstance attr = entity.getAttribute(Attribute.MAX_HEALTH);
         return attr != null ? attr.getBaseValue() : -1;
     }
 

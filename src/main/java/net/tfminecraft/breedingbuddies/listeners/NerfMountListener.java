@@ -55,8 +55,8 @@ public class NerfMountListener implements Listener {
 
         // Asegura valores seguros y aplica divisor
         try {
-            AttributeInstance health = horse.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-            AttributeInstance speed = horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+            AttributeInstance health = horse.getAttribute(Attribute.MAX_HEALTH);
+            AttributeInstance speed = horse.getAttribute(Attribute.MOVEMENT_SPEED);
 
             if (health != null) {
                 double newHealth = Math.max(Numbers.minMountHealth, health.getBaseValue() / Numbers.mountNerfDivisor);

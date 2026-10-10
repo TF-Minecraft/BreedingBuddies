@@ -186,9 +186,9 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
             farmAnimal.setFriendshipPoints(friendship);
             UnownedAnimalsManager.addUnownedAnimal(farmAnimal);
 
-            horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
+            horse.getAttribute(Attribute.MAX_HEALTH).setBaseValue(health);
             horse.setHealth(health);
-            horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
+            horse.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(speed);
             horse.setJumpStrength(jump);
 
             NamespacedKey key = new NamespacedKey(BreedingBuddies.getInstance(), "is_nerfed");
