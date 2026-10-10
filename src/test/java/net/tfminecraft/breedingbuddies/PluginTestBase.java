@@ -40,6 +40,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -183,19 +184,10 @@ public abstract class PluginTestBase {
         return area;
     }
 
-    /**
-     * Waits for a background day change to finish. MockBukkit's own wait can return
-     * before a just-submitted task starts; the listener clears its flag when done.
-     */
-    protected void awaitDayChange() throws InterruptedException {
-        long deadline = System.currentTimeMillis() + 10_000;
-        while (DayChangeListener.isIsChangingDay()) {
-            if (System.currentTimeMillis() > deadline) {
-                throw new AssertionError("day change did not finish");
-            }
-            Thread.sleep(5);
-        }
-        server.getScheduler().waitAsyncTasksFinished();
+    /** Runs the next server tick, where a scheduled day change runs, and checks it finished. */
+    protected void awaitDayChange() {
+        server.getScheduler().performOneTick();
+        assertFalse(DayChangeListener.isIsChangingDay(), "day change did not finish");
     }
 
     protected static void setStatic(Class<?> owner, String name, Object value) throws ReflectiveOperationException {

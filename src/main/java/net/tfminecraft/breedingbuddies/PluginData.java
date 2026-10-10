@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,7 +15,6 @@ import net.tfminecraft.breedingbuddies.listeners.DayChangeListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -231,14 +229,10 @@ public class PluginData {
 		}
 	}
 
+	// Offline owners' animals change too (day changes, escapes, deaths), so every owner is written.
 	static void saveAllPlayerData() {
-		Collection<? extends Player> players = Bukkit.getServer().getOnlinePlayers();
-		for (Player player : players) {
-			UUID uuid = player.getUniqueId();
-			Set<FarmAnimal> animals = PluginData.getPlayerAnimals().get(uuid);
-			if (animals != null) {
-				savePlayerData(uuid, animals);
-			}
+		for (Map.Entry<UUID, Set<FarmAnimal>> entry : playerAnimals.entrySet()) {
+			savePlayerData(entry.getKey(), entry.getValue());
 		}
 	}
 

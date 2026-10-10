@@ -123,6 +123,20 @@ class BreedingBuddiesTest extends PluginTestBase {
     }
 
     @Test
+    void disablingWithADayChangeQueuedStillSaves() throws Exception {
+        PlayerMock alice = player();
+        own(alice, spawn(Cow.class));
+        server.getPluginManager().callEvent(new DayChangeEvent());
+        assertTrue(net.tfminecraft.breedingbuddies.listeners.DayChangeListener.isIsChangingDay());
+
+        server.getPluginManager().disablePlugin(plugin);
+
+        assertTrue(Files.exists(playerFile(alice.getUniqueId())));
+        // Disabling drops the queued task, so nothing clears the flag.
+        setStatic(net.tfminecraft.breedingbuddies.listeners.DayChangeListener.class, "isChangingDay", false);
+    }
+
+    @Test
     void commandsNeedASubcommandItRecognises() {
         PlayerMock admin = admin();
 

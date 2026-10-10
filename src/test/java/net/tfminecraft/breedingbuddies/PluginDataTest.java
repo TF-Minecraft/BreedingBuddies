@@ -78,13 +78,31 @@ class PluginDataTest extends PluginTestBase {
     }
 
     @Test
-    void offlinePlayersAreNotWrittenByTheRegularSave() {
+    void offlineOwnersAreSavedAndReloaded() {
         UUID offline = UUID.randomUUID();
-        OwnershipManager.registerOwnership(offline, detailedAnimal("Daisy"));
+        FarmAnimal daisy = detailedAnimal("Daisy");
+        OwnershipManager.registerOwnership(offline, daisy);
 
         PluginData.saveAllData(false);
+        PluginData.getPlayerAnimals().clear();
+        PluginData.loadAllData();
 
-        assertFalse(Files.exists(playerFile(offline)));
+        assertSameDetails(daisy, OwnershipManager.getAnimal(daisy.getUuid(), offline));
+    }
+
+    @Test
+    void anOwnerWhoGaveUpTheirLastAnimalDoesNotGetItBackAfterAReload() {
+        UUID offline = UUID.randomUUID();
+        FarmAnimal daisy = detailedAnimal("Daisy");
+        OwnershipManager.registerOwnership(offline, daisy);
+        PluginData.saveAllData(false);
+
+        OwnershipManager.removeOwnership(offline, daisy);
+        PluginData.saveAllData(false);
+        PluginData.getPlayerAnimals().clear();
+        PluginData.loadAllData();
+
+        assertTrue(OwnershipManager.getAnimals(offline).isEmpty());
     }
 
     @Test

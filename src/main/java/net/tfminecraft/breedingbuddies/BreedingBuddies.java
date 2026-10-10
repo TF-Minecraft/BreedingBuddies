@@ -57,7 +57,7 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
 
     @Override
     public void onDisable() {
-    	PluginData.saveAllData(false);
+    	PluginData.saveAllData(true);
     }
 
     public static BreedingBuddies getInstance() {
