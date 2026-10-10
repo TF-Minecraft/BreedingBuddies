@@ -10,7 +10,6 @@ import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -22,8 +21,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DayChangeListener implements Listener {
-	private static final Object changeDayLock = new Object();
-	private static volatile boolean isChangingDay = false;
+	private static boolean isChangingDay = false;
 	private static FileConfiguration numbersConfig;
 
 	public static void setNumbersConfig(FileConfiguration numbersConfig) {
@@ -32,7 +30,7 @@ public class DayChangeListener implements Listener {
 
 	@EventHandler
 	public void onDayChange(DayChangeEvent event) {
-		asyncGlobalChangeDay(null, 1);
+		scheduleGlobalChangeDay(null, 1);
 		manageChunkUse();
 	}
 
@@ -144,23 +142,23 @@ public class DayChangeListener implements Listener {
 		);
 	}
 
-	private static void asyncGlobalChangeDay(UUID excludedEntity, int daysChecked) {
-		synchronized (changeDayLock) {
-			if (isChangingDay) return;
-			isChangingDay = true;
+	// Chunk loading and entity reads must run on the server thread.
+	private static void scheduleGlobalChangeDay(UUID excludedEntity, int daysChecked) {
+		if (isChangingDay) return;
+		isChangingDay = true;
+		Bukkit.getScheduler().runTask(BreedingBuddies.getInstance(), () -> runGlobalChangeDay(excludedEntity, daysChecked));
+	}
+
+	private static void runGlobalChangeDay(UUID excludedEntity, int daysChecked) {
+		try {
+			globalChangeDay(excludedEntity, daysChecked);
+			PluginData.saveAllData(true);
+			updateLastDayChangeDate();
+		} catch (Exception e) {
+			System.out.println(("Error on DayChange: " + e));
+		} finally {
+			isChangingDay = false;
 		}
-		Plugin bb = BreedingBuddies.getInstance();
-		Bukkit.getScheduler().runTaskAsynchronously(bb, () -> {
-			try {
-				globalChangeDay(excludedEntity, daysChecked);
-				PluginData.saveAllData(true);
-				updateLastDayChangeDate();
-			} catch (Exception e) {
-				System.out.println(("Error on DayChange: " + e));
-			} finally {
-				isChangingDay = false;
-			}
-		});
 	}
 
 	private static void IndividualChangeDay(Entity entity, FarmAnimal animal, int daysChecked) {
@@ -190,14 +188,12 @@ public class DayChangeListener implements Listener {
 		int daysChecked = daysBetween(getLastChangeDate(), LocalDateTime.now(ZoneOffset.UTC));
 		if (daysChecked < 1) return;
 		IndividualChangeDay(entity, animal, daysChecked);
-		asyncGlobalChangeDay(entity.getUniqueId(), daysChecked);
+		scheduleGlobalChangeDay(entity.getUniqueId(), daysChecked);
 	}
 
 	public static void changeDayOnReport() {
-		synchronized (changeDayLock) {
-			if (isChangingDay) return; // evitar doble ejecución si ya está en marcha
-			isChangingDay = true;
-		}
+		if (isChangingDay) return;
+		isChangingDay = true;
 		try {
 			int daysChecked = daysBetween(getLastChangeDate(), LocalDateTime.now(ZoneOffset.UTC));
 			if (daysChecked < 1) return;

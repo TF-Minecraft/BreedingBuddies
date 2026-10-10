@@ -9,6 +9,7 @@ import net.tfminecraft.breedingbuddies.PluginTestBase;
 import net.tfminecraft.breedingbuddies.UnownedAnimalsManager;
 import net.tfminecraft.breedingbuddies.configurables.Numbers;
 import net.tfminecraft.breedingbuddies.events.DayChangeEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Cow;
@@ -24,6 +25,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -89,6 +92,29 @@ class DayChangeListenerTest extends PluginTestBase {
         assertTrue(Files.exists(playerFile(alice.getUniqueId())), "the day change saves data");
         assertTrue(storedLastDayChange() > before);
         assertFalse(DayChangeListener.isIsChangingDay());
+    }
+
+    @Test
+    void theDayChangeRunsOnTheServerThreadOnTheNextTick() {
+        FarmAnimal daisy = ownedCow(true);
+        Chunk home = fakeChunk(0, 0, true);
+        List<Boolean> readOnServerThread = new ArrayList<>();
+        when(home.getEntities()).thenAnswer(call -> {
+            readOnServerThread.add(Bukkit.isPrimaryThread());
+            return new Entity[] {entityOf(daisy)};
+        });
+        stable(home);
+
+        server.getPluginManager().callEvent(new DayChangeEvent());
+
+        assertTrue(DayChangeListener.isIsChangingDay());
+        assertTrue(daisy.getFed(), "nothing changes before the task runs");
+
+        awaitDayChange();
+
+        assertFalse(daisy.getFed());
+        assertFalse(readOnServerThread.isEmpty());
+        assertFalse(readOnServerThread.contains(false), "chunk entities are read on the server thread");
     }
 
     @Test
