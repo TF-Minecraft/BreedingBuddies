@@ -28,6 +28,19 @@ while breeding connects the next generation to the animals they have raised.
 
 Technical documentation is maintained in [TF-Minecraft/Docs](https://github.com/TF-Minecraft/Docs).
 
+## Tests and coverage
+
+Run `mvn clean verify` with Java 21 after preparing the pinned plugin
+dependencies, as the Build workflow does. JUnit 5, Mockito, and MockBukkit cover
+ownership, taming, care, breeding, bundles, stable chunks, mount stats, day
+changes, saved data, and the admin commands. Surefire test results are in
+`target/surefire-reports/`; JaCoCo's HTML and XML reports are in
+`target/site/jacoco/`. The build enforces **100% line coverage** across all
+production classes, with no exclusions, and CI uploads both reports. Branch and
+instruction coverage are reported but not enforced. The suite stubs MMOItems and
+MythicLib, so live servers, real MMOItems content, and real players still need
+server testing.
+
 ## License
 
 Copyright (c) 2026 TF-Minecraft contributors.
