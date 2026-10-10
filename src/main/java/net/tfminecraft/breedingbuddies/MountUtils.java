@@ -1,8 +1,6 @@
 package net.tfminecraft.breedingbuddies;
 
 import net.tfminecraft.breedingbuddies.configurables.Numbers;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -12,6 +10,9 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataType;
 
 public class MountUtils {
+    private MountUtils() {
+    }
+
     /**
      * Comprueba si una entidad es una montura con stats (vida, salto, velocidad)
      */
@@ -83,36 +84,10 @@ public class MountUtils {
     }
 
     /**
-     * Convierte altura en bloques a jumpStrength (0.4 a 1.0).
-     */
-    public static double blockHeightToJumpStrength(double height) {
-        double a = -7.0;
-        double b = 12.5;
-        double c = -(2.0 + height);
-
-        double discriminant = b * b - 4 * a * c;
-        if (discriminant < 0) return -1;
-
-        double sqrt = Math.sqrt(discriminant);
-        double s1 = (-b + sqrt) / (2 * a);
-        double s2 = (-b - sqrt) / (2 * a);
-
-        double result = Math.max(s1, s2);
-        return Math.max(0.4, Math.min(result, 1.0));
-    }
-
-    /**
      * Convierte velocidad interna a bloques por segundo.
      */
     public static double speedToBlocksPerSecond(double internalSpeed) {
         return internalSpeed * 42.16;
-    }
-
-    /**
-     * Convierte bloques por segundo a velocidad interna.
-     */
-    public static double blocksPerSecondToSpeed(double blocksPerSecond) {
-        return blocksPerSecond / 42.16;
     }
 
     /**
@@ -121,14 +96,6 @@ public class MountUtils {
      */
     public static int healthPointsToHearts(double healthPoints) {
         return (int) (healthPoints / 2);
-    }
-
-    /**
-     * Convierte corazones a puntos de vida.
-     * Por ejemplo, 15 corazones => 30 puntos de vida.
-     */
-    public static double heartsToHealthPoints(int hearts) {
-        return hearts * 2.0;
     }
 
     // Herencia con aleatoriedad controlada
@@ -150,8 +117,7 @@ public class MountUtils {
     }
 
     public static void applyInheritedStats(LivingEntity child, LivingEntity parent1, LivingEntity parent2) {
-        //1
-        MountStats mountStats = MountStats.getMountStats(child.getName());
+        MountStats mountStats = MountStats.getMountStats(child.getType().name());
         double minHealth = mountStats.getMinHealth();
         double maxHealth = mountStats.getMaxHealth();
 
@@ -214,7 +180,7 @@ public class MountUtils {
         double speed = MountUtils.getSpeed(livingEntity);
         double jump = MountUtils.getJumpStrength(livingEntity);
 
-        return MountUtils.calculateGeneticsFromStats(health, speed, jump, entity.getName());
+        return MountUtils.calculateGeneticsFromStats(health, speed, jump, entity.getType().name());
     }
 
     public static void setNeuteredFlag(Entity entity, boolean isNeutered) {

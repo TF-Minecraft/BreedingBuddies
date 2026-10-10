@@ -33,11 +33,7 @@ public class DayChangeListener implements Listener {
 	@EventHandler
 	public void onDayChange(DayChangeEvent event) {
 		asyncGlobalChangeDay(null, 1);
-		try {
-			manageChunkUse();
-		} catch (Error e) {
-			System.out.println("Error while managing chunk use");
-		}
+		manageChunkUse();
 	}
 
 	public static void globalChangeDay(UUID excludeUuid, int daysChecked) {
@@ -112,17 +108,12 @@ public class DayChangeListener implements Listener {
 			if (animal != null) {
 				if (!hasFarmAnimals.get())
 					hasFarmAnimals.set(true);
-				if (excludeUuid == null) {
+				// The excluded animal has already had its own day change applied.
+				if (!animal.getUuid().equals(excludeUuid)) {
 					int friendshipLost = Numbers.friendshipLostNotCaring * daysChecked + Numbers.friendshipLostNotFeeding * daysChecked;
 					animal.changeDay(noWater, spaceNeeded, true, friendshipLost);
-					processed.add(animal.getUuid());
-				} else {
-					if (excludeUuid != animal.getUuid()) {
-						int friendshipLost = Numbers.friendshipLostNotCaring * daysChecked + Numbers.friendshipLostNotFeeding * daysChecked;
-						animal.changeDay(noWater, spaceNeeded, true, friendshipLost);
-						processed.add(animal.getUuid());
-					}
 				}
+				processed.add(animal.getUuid());
 				animal.setDaysOut(0);
 			}
 		} catch (Exception ex) {
@@ -196,7 +187,7 @@ public class DayChangeListener implements Listener {
 	}
 
 	public static void changeDayOnInteract(Entity entity, FarmAnimal animal) {
-		int daysChecked = daysBetween(getLastChangeDate(), LocalDateTime.now());
+		int daysChecked = daysBetween(getLastChangeDate(), LocalDateTime.now(ZoneOffset.UTC));
 		if (daysChecked < 1) return;
 		IndividualChangeDay(entity, animal, daysChecked);
 		asyncGlobalChangeDay(entity.getUniqueId(), daysChecked);
@@ -208,7 +199,7 @@ public class DayChangeListener implements Listener {
 			isChangingDay = true;
 		}
 		try {
-			int daysChecked = daysBetween(getLastChangeDate(), LocalDateTime.now());
+			int daysChecked = daysBetween(getLastChangeDate(), LocalDateTime.now(ZoneOffset.UTC));
 			if (daysChecked < 1) return;
 			globalChangeDay(null, daysChecked);
 			PluginData.saveAllData(true);

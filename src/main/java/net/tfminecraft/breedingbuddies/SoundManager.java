@@ -6,6 +6,9 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 public class SoundManager {
+	private SoundManager() {
+	}
+
 	public static void playAmethystStepSound(Entity entity) {
         if (entity instanceof LivingEntity) {
             LivingEntity livingEntity = (LivingEntity) entity;

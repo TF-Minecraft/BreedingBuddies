@@ -40,23 +40,23 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
     private File numbersFile = null;
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private DayChangeScheduler dayScheduler;
+    private static final String SPAWN_ANIMAL_USAGE = "Usage: /breedingbuddies spawnanimal <entityType> <friendship> <genetics>";
+    private static final String SPAWN_MOUNT_USAGE = "Usage: /breedingbuddies spawnmount <entityType> <friendship> <health> <speed> <jump>";
     @Override
     public void onEnable() {
+        instance = this;
         PluginData.loadAllData();
         createAndLoadConfigs();
         registerListeners();
         this.dayScheduler = new DayChangeScheduler(this, Numbers.startingDayHour, Numbers.startingDayMin);
         this.dayScheduler.startScheduler();
-        //this.getCommand("breedingbuddies").setExecutor(this);
         InitSubcommands();
         getCommand("breedingbuddies").setTabCompleter(this);
         startAutoSaveTask();
-        instance = this;
     }
 
     @Override
     public void onDisable() {
-//    	Cleanser.removeDisappearedAnimals();
     	PluginData.saveAllData(false);
     }
 
@@ -119,8 +119,15 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
     private boolean handleSpawnAnimal(CommandSender sender, String[] args) {
         if (args.length == 4 && sender instanceof Player player) {
             String entityType = args[1].toUpperCase();
-            int friendship = Integer.parseInt(args[2]);
-            int genetics = Integer.parseInt(args[3]);
+            int friendship;
+            int genetics;
+            try {
+                friendship = Integer.parseInt(args[2]);
+                genetics = Integer.parseInt(args[3]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage(ChatColor.RED + SPAWN_ANIMAL_USAGE);
+                return false;
+            }
 
             if (!bundlesConfig.contains(entityType)) {
                 sender.sendMessage(ChatColor.RED + "Invalid entity type specified in config.");
@@ -138,7 +145,7 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
             sender.sendMessage(ChatColor.GREEN + "[BreedingBuddies]" + ChatColor.YELLOW + " Animal spawned successfully!");
             return true;
         }
-        sender.sendMessage(ChatColor.RED + "Usage: /breedingbuddies spawnanimal <entityType> <friendship> <genetics>");
+        sender.sendMessage(ChatColor.RED + SPAWN_ANIMAL_USAGE);
         return false;
     }
 
@@ -155,10 +162,19 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
     private boolean handleSpawnMount(CommandSender sender, String[] args) {
         if (args.length == 6 && sender instanceof Player player) {
             String entityType = args[1].toUpperCase();
-            int friendship = Integer.parseInt(args[2]);
-            double health = Integer.parseInt(args[3]);
-            double speed = Double.parseDouble(args[4]);
-            double jump = Double.parseDouble(args[5]);
+            int friendship;
+            double health;
+            double speed;
+            double jump;
+            try {
+                friendship = Integer.parseInt(args[2]);
+                health = Integer.parseInt(args[3]);
+                speed = Double.parseDouble(args[4]);
+                jump = Double.parseDouble(args[5]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage(ChatColor.RED + SPAWN_MOUNT_USAGE);
+                return false;
+            }
 
             EntityType type;
             try {
@@ -168,17 +184,14 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
                 return false;
             }
 
-            if (!AbstractHorse.class.isAssignableFrom(type.getEntityClass())) {
+            Class<? extends Entity> entityClass = type.getEntityClass();
+            if (entityClass == null || !AbstractHorse.class.isAssignableFrom(entityClass)) {
                 sender.sendMessage(ChatColor.RED + "Entity type must be a mount (like HORSE, DONKEY, etc).");
                 return false;
             }
 
-            Entity entity = player.getWorld().spawnEntity(player.getLocation(), type);
-
-            if (!(entity instanceof AbstractHorse horse)) {
-                sender.sendMessage(ChatColor.RED + "Spawned entity is not a mount.");
-                return false;
-            }
+            AbstractHorse horse = (AbstractHorse) player.getWorld().spawnEntity(player.getLocation(), type);
+            Entity entity = horse;
 
             UUID entityUuid = entity.getUniqueId();
             FarmAnimal farmAnimal = new FarmAnimal(entityUuid, entityType, player.getUniqueId(), entity, 0, friendship);
@@ -197,7 +210,7 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
             sender.sendMessage(ChatColor.GREEN + "[BreedingBuddies]" + ChatColor.YELLOW + " Animal spawned successfully!");
             return true;
         }
-        sender.sendMessage(ChatColor.RED + "Usage: /breedingbuddies spawnmount <entityType> <friendship> <health> <speed> <jump>");
+        sender.sendMessage(ChatColor.RED + SPAWN_MOUNT_USAGE);
         return false;
     }
 
@@ -216,8 +229,6 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
     private boolean handleFix(CommandSender sender, String[] args) {
         for (Set<FarmAnimal> animals : PluginData.getPlayerAnimals().values()) {
             for (FarmAnimal animal : animals) {
-                //animal.setCared(true);
-                //animal.setFed(true);
                 animal.setState(AnimalStates.HAPPY);
             }
         }
@@ -309,7 +320,6 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
         getServer().getPluginManager().registerEvents(new BundleOpener(this), this);
         getServer().getPluginManager().registerEvents(new BundleCollector(this), this);
         getServer().getPluginManager().registerEvents(new AnvilRenameListener(this), this);
-        getServer().getPluginManager().registerEvents(new PluginData(), this);
         getServer().getPluginManager().registerEvents(new MountListener(), this);
         getServer().getPluginManager().registerEvents(new NerfMountListener(), this);
     }
@@ -509,7 +519,7 @@ geneticDivisorMultiplierToRetardProgression: 0.4  # Higher parent stats = slower
 
 # ========== REWARDS & TIME ==========
 hoursBetweenRewards: 8            # Real-life hours between reward eligibility.
-lastDayChangeDate: """ + Instant.now().getEpochSecond() + " # Epoch timestamp of the last change day (UTC)." + """ 
+lastDayChangeDate: {lastDayChangeDate} # Epoch timestamp of the last change day (UTC).
 startingDayHour: 21               # Hour of the day when the plugin triggers a day change (0–23) (UTC).
 startingDayMin: 1               # Minute of the hour when the plugin triggers a day change (0–59) (UTC).
 
@@ -524,7 +534,7 @@ defaultMountStats:
 
 nerfMountStats: false             # Whether to nerf mount stats automatically.
 mountNerfDivisor: 2.0             # Applied if nerfMountStats is true; divides the stats.
-""";
+""".replace("{lastDayChangeDate}", String.valueOf(Instant.now().getEpochSecond()));
     }
 
     @Override

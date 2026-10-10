@@ -5,6 +5,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
 public class ParticleManager {
+	private ParticleManager() {
+	}
+
 	public static void heartParticles(Entity entity) {
         if (entity instanceof LivingEntity) {
             LivingEntity livingEntity = (LivingEntity) entity;

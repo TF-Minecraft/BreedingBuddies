@@ -3,15 +3,11 @@ package net.tfminecraft.breedingbuddies;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -20,19 +16,14 @@ import net.tfminecraft.breedingbuddies.listeners.DayChangeListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 
 
-public class PluginData implements Listener {
+public class PluginData {
 
 	private static Map<UUID, FarmAnimal> unownedAnimals = new HashMap<>();
 	private static Map<UUID, Set<FarmAnimal>> playerAnimals = new HashMap<>();
@@ -42,16 +33,8 @@ public class PluginData implements Listener {
 	private static final String UNOWNED_ANIMALS_DATA_DIR = "plugins/BreedingBuddies/Data/unownedanimals.json";
 	private static final String STABLE_CHUNKS_DATA_DIR = "plugins/BreedingBuddies/Data/stablechunks.json";
 
-	public static boolean loaded = false;
-
-//	@EventHandler
-//	public void onPlayerQuit(PlayerQuitEvent event) {
-//		UUID uuid = event.getPlayer().getUniqueId();
-//		List<FarmAnimal> animals = PluginData.getPlayerAnimals().get(uuid);
-//		if (animals != null) {
-//			savePlayerData(uuid, animals);
-//		}
-//	}
+	private PluginData() {
+	}
 
 	public static void saveAllData(boolean force) {
 		if (!force && DayChangeListener.isIsChangingDay()) return;
@@ -78,7 +61,6 @@ public class PluginData implements Listener {
 				JSONObject chunkAreaJson = new JSONObject();
 				chunkAreaJson.put("daysAbandoned", chunkArea.getDaysAbandoned());
 
-				Set<Chunk> chunks = new HashSet<>(chunkArea.getChunks());
 				JSONArray chunksJsonArray = new JSONArray();
 				for (Chunk chunk : chunkArea.getChunks()) {
 					JSONObject chunkJson = new JSONObject();
@@ -90,9 +72,6 @@ public class PluginData implements Listener {
 				chunkAreaJson.put("chunks", chunksJsonArray);
 				chunkAreasJsonArray.add(chunkAreaJson);
 			}
-
-			JSONObject chunkAreasJson = new JSONObject();
-			chunkAreasJson.put("chunkArea", chunkAreasJsonArray);
 
 			FileWriter fileWriter = new FileWriter(file);
 			fileWriter.write(chunkAreasJsonArray.toJSONString());
@@ -169,11 +148,7 @@ public class PluginData implements Listener {
 				animalJson.put("state", animal.getState().toString());
 				animalJson.put("fed", animal.getFed());
 				animalJson.put("cared", animal.getCared());
-				//saveunownedah
-				//animalJson.put("sleptInStable", true);
 				animalJson.put("sleptInStable", animal.isSleptInStable());
-
-				//animalJson.put("sleptInStable", animal.isSleptInStable());
 				animalJson.put("spaceNeeded", animal.isSpaceNeeded());
 				animalJson.put("waterNeeded", animal.isWaterNeeded());
 				animalJson.put("daysOut", animal.getDaysOut());
@@ -256,38 +231,6 @@ public class PluginData implements Listener {
 		}
 	}
 
-	public static void saveAllPlayerDataByFile() {
-		try {
-			File playerDataFolder = new File(PLAYER_DATA_DIR);
-			if (!playerDataFolder.exists() || !playerDataFolder.isDirectory()) {
-				return;
-			}
-
-			// Recorre cada carpeta (cada jugador) dentro de la carpeta PlayerData
-			for (File playerFolder : playerDataFolder.listFiles()) {
-				if (playerFolder.isFile()) {
-					String fileName = playerFolder.getName();
-
-					// Verifica y elimina la extensión .json si está presente
-					if (fileName.endsWith(".json")) {
-						String uuidString = fileName.substring(0, fileName.length() - 5);
-						try {
-							UUID playerUUID = UUID.fromString(uuidString);
-							// Llama a la función loadPlayerData con el UUID del jugador
-							savePlayerData(playerUUID, PluginData.getPlayerAnimals().get(playerUUID));
-						} catch (IllegalArgumentException e) {
-							// Maneja el caso en que el nombre de archivo no sea un UUID válido
-							Bukkit.getLogger().warning("Invalid player data file: " + fileName);
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-
 	static void saveAllPlayerData() {
 		Collection<? extends Player> players = Bukkit.getServer().getOnlinePlayers();
 		for (Player player : players) {
@@ -324,8 +267,6 @@ public class PluginData implements Listener {
 				animalJson.put("state", animal.getState().toString());
 				animalJson.put("fed", animal.getFed());
 				animalJson.put("cared", animal.getCared());
-				//saveplayerah
-				//animalJson.put("sleptInStable", true);
 				animalJson.put("sleptInStable", animal.isSleptInStable());
 				animalJson.put("spaceNeeded", animal.isSpaceNeeded());
 				animalJson.put("waterNeeded", animal.isWaterNeeded());
@@ -396,11 +337,6 @@ public class PluginData implements Listener {
 					farmAnimal.setState(AnimalStates.valueOf((String) animalJson.get("state")));
 					farmAnimal.setFed((boolean) animalJson.get("fed"));
 					farmAnimal.setCared((boolean) animalJson.get("cared"));
-
-//	                farmAnimal.setSleptInStable(true);
-//		            farmAnimal.setSpaceNeeded(false);
-//		            farmAnimal.setWaterNeeded(false);
-					//loadplayerah
 					farmAnimal.setSleptInStable((boolean) animalJson.get("sleptInStable"));
 					farmAnimal.setSpaceNeeded((boolean) animalJson.get("spaceNeeded"));
 					farmAnimal.setWaterNeeded((boolean) animalJson.get("waterNeeded"));
@@ -437,33 +373,30 @@ public class PluginData implements Listener {
 	public static void loadAllPlayerData() {
 		Map<UUID, FarmAnimal> tempAnimalMap = new HashMap<>();
 
-		try {
-			File playerDataFolder = new File(PLAYER_DATA_DIR);
-			if (!playerDataFolder.exists() || !playerDataFolder.isDirectory()) {
-				return;
-			}
+		// listFiles() is null when the folder is missing or unreadable.
+		File[] playerFiles = new File(PLAYER_DATA_DIR).listFiles();
+		if (playerFiles == null) {
+			return;
+		}
 
-			// Recorre cada carpeta (cada jugador) dentro de la carpeta PlayerData
-			for (File playerFolder : playerDataFolder.listFiles()) {
-				if (playerFolder.isFile()) {
-					String fileName = playerFolder.getName();
+		// Recorre cada carpeta (cada jugador) dentro de la carpeta PlayerData
+		for (File playerFolder : playerFiles) {
+			if (playerFolder.isFile()) {
+				String fileName = playerFolder.getName();
 
-					// Verifica y elimina la extensión .json si está presente
-					if (fileName.endsWith(".json")) {
-						String uuidString = fileName.substring(0, fileName.length() - 5);
-						try {
-							UUID playerUUID = UUID.fromString(uuidString);
-							// Llama a la función loadPlayerData con el UUID del jugador
-							loadPlayerData(playerUUID, tempAnimalMap);
-						} catch (IllegalArgumentException e) {
-							// Maneja el caso en que el nombre de archivo no sea un UUID válido
-							Bukkit.getLogger().warning("Invalid player data file: " + fileName);
-						}
+				// Verifica y elimina la extensión .json si está presente
+				if (fileName.endsWith(".json")) {
+					String uuidString = fileName.substring(0, fileName.length() - 5);
+					try {
+						UUID playerUUID = UUID.fromString(uuidString);
+						// Llama a la función loadPlayerData con el UUID del jugador
+						loadPlayerData(playerUUID, tempAnimalMap);
+					} catch (IllegalArgumentException e) {
+						// Maneja el caso en que el nombre de archivo no sea un UUID válido
+						Bukkit.getLogger().warning("Invalid player data file: " + fileName);
 					}
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -477,9 +410,5 @@ public class PluginData implements Listener {
 
 	public static ArrayList<ChunkArea> getChunkAreas() {
 		return chunkAreas;
-	}
-
-	public static boolean isLoaded() {
-		return loaded;
 	}
 }

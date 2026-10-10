@@ -2,10 +2,7 @@ package net.tfminecraft.breedingbuddies;
 
 import io.lumine.mythic.lib.api.item.NBTItem;
 import net.Indyuce.mmoitems.MMOItems;
-import net.Indyuce.mmoitems.api.item.mmoitem.MMOItem;
-import net.Indyuce.mmoitems.manager.ItemManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
@@ -15,18 +12,15 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ItemUtils {
-    
+    private ItemUtils() {
+    }
+
 	public static String getItemId(ItemStack item) {
 		NBTItem nbtItem = NBTItem.get(item);
 		if (nbtItem.hasType()) {
 			return nbtItem.getString("MMOITEMS_ITEM_ID");
 		}
 		return item.getType().toString();
-	}
-	
-	public static boolean isCustom(ItemStack item) {
-		NBTItem nbtItem = NBTItem.get(item);
-		return nbtItem.hasType();
 	}
 	
 	public static boolean hasCustomName(ItemStack item) {
@@ -45,18 +39,6 @@ public class ItemUtils {
 	    return null;
 	}
 
-	public static ItemStack changeCustomName(ItemStack item, String nuevoNombre) {
-		if (item == null || item.getType().isAir()) return item;
-
-		ItemMeta meta = item.getItemMeta();
-		if (meta != null) {
-			meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', nuevoNombre));
-			item.setItemMeta(meta);
-		}
-
-		return item;
-	}
-	
 	public static void storeDataInItem(ItemStack item, String data, JavaPlugin plugin) {
 	    if (item != null && data != null) {
 	        ItemMeta meta = item.getItemMeta();
@@ -90,22 +72,16 @@ public class ItemUtils {
 			return new ItemStack(Material.DIRT, 1);
 		}
 		
-	    ItemManager itemManager = MMOItems.plugin.getItems();
-	    MMOItem mmoitem = itemManager.getMMOItem(MMOItems.plugin.getTypes().get(type.toUpperCase()), id.toUpperCase());
-	    ItemStack item = mmoitem.newBuilder().build();
-	    item.setAmount(amount);
-	    
-//		Using TLib:
-//	    String itemString = "m." + type + "." + id;
-//	    ItemAPI api = (ItemAPI) TLibs.getApiInstance(APIType.ITEM_API);
-//	    ItemStack item = api.getCreator().getItemFromPath("");
-//	    item.setAmount(amount);
-	    
+	    // Null when MMOItems has no such item; callers fall back to a placeholder.
+	    ItemStack item = MMOItems.plugin.getItem(MMOItems.plugin.getTypes().get(type.toUpperCase()), id.toUpperCase());
+	    if (item != null) {
+	        item.setAmount(amount);
+	    }
 	    return item;
 	}
 	
 	public static boolean pluginExists(String pluginName) {
-		Plugin plugin = Bukkit.getPluginManager().getPlugin("MMOItems");
+		Plugin plugin = Bukkit.getPluginManager().getPlugin(pluginName);
         return plugin != null && plugin.isEnabled();
 	}
 }

@@ -30,6 +30,9 @@ public class Messages {
     public static String tameFirst;
     public static String removeOwnership;
 
+    private Messages() {
+    }
+
     public static void loadConfig(FileConfiguration config) {
         inventoryName = config.getString("messages.inventoryName");
         nameFirst = config.getString("messages.nameFirst");

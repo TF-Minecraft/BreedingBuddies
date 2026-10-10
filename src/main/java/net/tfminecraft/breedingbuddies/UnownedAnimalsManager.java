@@ -3,6 +3,8 @@ package net.tfminecraft.breedingbuddies;
 import java.util.UUID;
 
 public class UnownedAnimalsManager {
+    private UnownedAnimalsManager() {
+    }
 
     public static void addUnownedAnimal(FarmAnimal animal) {
         PluginData.getUnownedAnimals().putIfAbsent(animal.getUuid(), animal);
