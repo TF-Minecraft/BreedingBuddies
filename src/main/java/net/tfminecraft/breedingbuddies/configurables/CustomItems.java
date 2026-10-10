@@ -13,6 +13,8 @@ public class CustomItems {
     public static String mountStatsItem;
     public static String neuterItem;
 
+    private CustomItems() {
+    }
 
     public static void loadConfig(FileConfiguration config) {
         tamingItem = config.getString("items.tamingItem", "minecraft:carrot");

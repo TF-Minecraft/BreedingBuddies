@@ -10,10 +10,9 @@ import java.util.Set;
 
 public class AnimalUtils {
     private final static Set<EntityType> farmAnimals = new HashSet<>();
-    private static FileConfiguration bundlesConfig;
     
     public AnimalUtils(FileConfiguration bundlesConfig) {
-    	AnimalUtils.bundlesConfig = bundlesConfig;
+    	farmAnimals.clear();
     	for (String key : bundlesConfig.getKeys(false)) {
             try {
                 EntityType entityType = EntityType.valueOf(key.toUpperCase());

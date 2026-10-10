@@ -84,49 +84,45 @@ public class TamingListener implements Listener {
 
 	private void handleEmptyInteraction(Player player, ItemStack itemInHand) {
 		String entityUuid = ItemUtils.getDataFromItem(itemInHand, plugin);
+		if (entityUuid == null) {
+			player.sendMessage(Messages.useOnOwnedAnimal);
+			return;
+		}
 		UUID uuid = UUID.fromString(entityUuid);
 		FarmAnimal animal = OwnershipManager.getAnimal(uuid);
 		if (animal == null) {
 			player.sendMessage(Messages.invalidAnimalOrNotFound);
 			return;
 		}
-		if (entityUuid != null) {
-			if (OwnershipManager.isOwner(player.getUniqueId(), uuid)) {
-				player.sendMessage(String.format(Messages.alreadyOwner, animal.getName()));
-			} else {
-				OwnershipManager.registerOwnership(player.getUniqueId(), animal);
-//				targetPlayer.sendMessage(String.format(Messages.nowCoowner, animal.getName()));
-//				player.sendMessage(String.format(Messages.ownershipShared, animal.getName()));
-				SoundManager.playAmethystClusterStepSound(player);
-				ParticleManager.cherryParticles(player);
-				itemInHand.setAmount(itemInHand.getAmount() - 1);
-			}
+		if (OwnershipManager.isOwner(player.getUniqueId(), uuid)) {
+			player.sendMessage(String.format(Messages.alreadyOwner, animal.getName()));
 		} else {
-			player.sendMessage(Messages.useOnOwnedAnimal);
+			OwnershipManager.registerOwnership(player.getUniqueId(), animal);
+			SoundManager.playAmethystClusterStepSound(player);
+			ParticleManager.cherryParticles(player);
+			itemInHand.setAmount(itemInHand.getAmount() - 1);
 		}
 	}
 
 	private void handlePlayerInteraction(Player player, Entity targetPlayer, ItemStack itemInHand) {
 		String entityUuid = ItemUtils.getDataFromItem(itemInHand, plugin);
+		if (entityUuid == null) {
+			player.sendMessage(Messages.useOnOwnedAnimal);
+			return;
+		}
 		UUID uuid = UUID.fromString(entityUuid);
 		FarmAnimal animal = OwnershipManager.getAnimal(uuid);
 		if (animal == null) {
 		    player.sendMessage(Messages.invalidAnimalOrNotFound);
 		    return;
 		}
-		if (entityUuid != null) {
-			if (OwnershipManager.isOwner(targetPlayer.getUniqueId(), uuid)) {
-				player.sendMessage(String.format(Messages.alreadyOwner, animal.getName()));
-			} else {
-				OwnershipManager.registerOwnership(targetPlayer.getUniqueId(), animal);
-//				targetPlayer.sendMessage(String.format(Messages.nowCoowner, animal.getName()));
-//				player.sendMessage(String.format(Messages.ownershipShared, animal.getName()));
-				SoundManager.playAmethystClusterStepSound(targetPlayer);
-				ParticleManager.cherryParticles(targetPlayer);
-				itemInHand.setAmount(itemInHand.getAmount() - 1);
-			}
+		if (OwnershipManager.isOwner(targetPlayer.getUniqueId(), uuid)) {
+			player.sendMessage(String.format(Messages.alreadyOwner, animal.getName()));
 		} else {
-			player.sendMessage(Messages.useOnOwnedAnimal);
+			OwnershipManager.registerOwnership(targetPlayer.getUniqueId(), animal);
+			SoundManager.playAmethystClusterStepSound(targetPlayer);
+			ParticleManager.cherryParticles(targetPlayer);
+			itemInHand.setAmount(itemInHand.getAmount() - 1);
 		}
 	}
 
@@ -228,6 +224,7 @@ public class TamingListener implements Listener {
 			int genetics = oldAnimal.getGeneticPoints();
 			UnownedAnimalsManager.removeUnownedAnimal(entity.getUniqueId());
 			newAnimal = new FarmAnimal(entity.getUniqueId(), entity.getCustomName(), player.getUniqueId(), entity, genetics, friendships);
+			newAnimal.setName(entity.getCustomName());
 		} else if (UnownedAnimalsManager.isUnowned(entity.getUniqueId())) {
 			int genetics = UnownedAnimalsManager.getAnimal(entity.getUniqueId()).getGeneticPoints();
 			UnownedAnimalsManager.removeUnownedAnimal(entity.getUniqueId());

@@ -25,10 +25,11 @@ public class Numbers {
     public static double minMountJump;
     public static double mountNerfDivisor;
     public static boolean nerfMountStats;
-    static FileConfiguration config;
+
+    private Numbers() {
+    }
 
     public static void loadConfig(FileConfiguration numbersConfig) {
-        config = numbersConfig;
         maxFriendshipAndGenetics = numbersConfig.getInt("maxFriendshipAndGenetics");
         initialGeneticMax = numbersConfig.getInt("initialGeneticMax");
         friendshipByFeeding = numbersConfig.getInt("friendshipByFeeding");

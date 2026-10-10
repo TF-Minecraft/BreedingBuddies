@@ -52,9 +52,9 @@ public class BundleCollector implements Listener {
 				event.setCancelled(true);
 			if (canCollect(entity)) {
 				FarmAnimal animal = OwnershipManager.getAnimal(entity.getUniqueId());
-				animal.setLastRewardCollected(new Date());
 				ItemStack bundle = generateBundle(player, entity);
 				if (InventoryUtils.countEmptySlots(player) > 0) {
+					animal.setLastRewardCollected(new Date());
 					player.getInventory().addItem(bundle);
 					SoundManager.playAmethystStepSound(entity);
 				} else {

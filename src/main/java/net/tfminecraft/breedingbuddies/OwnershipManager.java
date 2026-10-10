@@ -3,7 +3,9 @@ package net.tfminecraft.breedingbuddies;
 import java.util.*;
 
 public class OwnershipManager {
-	
+	private OwnershipManager() {
+	}
+
 	public static void registerOwnership (UUID playerUuid, FarmAnimal animal) {
 		Set<FarmAnimal> animals = PluginData.getPlayerAnimals().getOrDefault(playerUuid, new HashSet<>());
 	    if (!animals.contains(animal)) {
@@ -11,30 +13,6 @@ public class OwnershipManager {
 	        PluginData.getPlayerAnimals().put(playerUuid, animals);
 	        animal.getOwnersUuids().add(playerUuid);
 	    }
-	}
-
-	public static void registerCoOwnership(UUID ownerUuid, UUID targetUuid, UUID animalUuid) {
-		// 1. Buscar el animal en la lista del owner actual
-		Set<FarmAnimal> ownerAnimals = PluginData.getPlayerAnimals().get(ownerUuid);
-		if (ownerAnimals == null) return;
-
-		FarmAnimal animal = ownerAnimals.stream()
-				.filter(a -> a.getUuid().equals(animalUuid))
-				.findFirst()
-				.orElse(null);
-
-		if (animal == null) return;
-
-		// 2. Añadir el nuevo UUID a los owners del animal
-		animal.getOwnersUuids().add(targetUuid);
-
-		// 3. Añadir el animal a la lista del nuevo owner si no está ya
-		Set<FarmAnimal> targetAnimals = PluginData.getPlayerAnimals()
-				.computeIfAbsent(targetUuid, k -> new HashSet<>());
-
-		if (!targetAnimals.contains(animal)) {
-			targetAnimals.add(animal);
-		}
 	}
 
 	public static void removeOwnership (UUID playerUuid, FarmAnimal animal) {
@@ -78,17 +56,6 @@ public class OwnershipManager {
         return PluginData.getPlayerAnimals().values().stream()
                 .flatMap(Set::stream)
                 .anyMatch(animal -> animal.getUuid().equals(animalUuid) && !animal.getOwnersUuids().isEmpty());
-    }
-	
-	public static ArrayList<UUID> getOwners(UUID animalUuid) {
-        for (Set<FarmAnimal> animals : PluginData.getPlayerAnimals().values()) {
-            for (FarmAnimal animal : animals) {
-                if (animal.getUuid().equals(animalUuid)) {
-                    return new ArrayList<>(animal.getOwnersUuids());
-                }
-            }
-        }
-        return new ArrayList<>();
     }
 	
 	public static FarmAnimal getAnimal(UUID animalUuid, UUID playerUuid) {

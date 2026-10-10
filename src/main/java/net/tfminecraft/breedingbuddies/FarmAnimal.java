@@ -19,7 +19,6 @@ public class FarmAnimal {
 	private UUID uuid;
     private String name;
     private Set<UUID> ownersUuids = new HashSet<>();
-    //private Entity entity;
 	private int geneticPoints;
     private AnimalStates state;
     private boolean fed = false;
@@ -125,13 +124,6 @@ public class FarmAnimal {
         friendshipPoints += amount;
     }
 
-    public void decreaseFriendship(int amount) {
-        friendshipPoints -= amount;
-        if (friendshipPoints < 0) {
-        	friendshipPoints = 0;
-        }
-    }
-
     public void changeDay(boolean waterNeeded, boolean spaceNeeded, boolean sleptInStable, int friendshipLost) {
         if (lastUpdated != null) {
             Instant lastInstant = lastUpdated.toInstant();
@@ -193,10 +185,6 @@ public class FarmAnimal {
         daysOut++;
     }
 
-//    public Entity getEntity() {
-//        return entity;
-//    }
-
     public Date getLastRewardCollected() {
         return lastRewardCollected;
     }
@@ -251,10 +239,6 @@ public class FarmAnimal {
             this.geneticPoints = MountUtils.getGenetics(entity);
     }
 
-	public void resetDaysOut() {
-		daysOut = 0;
-	}
-	
 	private int friendshipPoints = 0;
     public void setFriendshipPoints(int friendshipPoints) {
         this.friendshipPoints = Math.max(friendshipPoints, 0);
@@ -268,12 +252,6 @@ public class FarmAnimal {
 		this.daysOut = daysOut;
 	}
 
-    public void setNeutered(Entity entity) {
-        entity.getScoreboardTags().add("bb.isNeutered");
-    }
-    public boolean isNeutered(Entity entity) {
-        return entity.getScoreboardTags().contains("bb.isNeutered");
-    }
     public boolean isSleptInStable() {
         return sleptInStable;
     }

@@ -4,7 +4,6 @@ import net.tfminecraft.breedingbuddies.*;
 import net.tfminecraft.breedingbuddies.configurables.CustomItems;
 import net.tfminecraft.breedingbuddies.configurables.Messages;
 import net.tfminecraft.breedingbuddies.configurables.Numbers;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Animals;
@@ -80,8 +79,7 @@ public class InventoryManager implements Listener {
         int geneticPoints = farmAnimal.getGeneticPoints();
 
         UUID entityUUID = entity.getUniqueId();
-        AnimalInventoryHolder holder = new AnimalInventoryHolder(entityUUID);
-        Inventory inv = Bukkit.createInventory(holder, 27, ChatColor.GOLD + Messages.inventoryName);
+        Inventory inv = new AnimalInventoryHolder(entityUUID, 27, ChatColor.GOLD + Messages.inventoryName).getInventory();
 
         // Primera fila: Nombre y Estado
         inv.setItem(3, createItem(Material.NAME_TAG, ChatColor.GOLD + "Name: " + animalName));
@@ -125,8 +123,7 @@ public class InventoryManager implements Listener {
         int pointsPerHeart = maxPoints / 5;
 
         UUID entityUUID = entity.getUniqueId();
-        AnimalInventoryHolder holder = new AnimalInventoryHolder(entityUUID);
-        Inventory inv = Bukkit.createInventory(holder, 36, ChatColor.GOLD + Messages.inventoryName);
+        Inventory inv = new AnimalInventoryHolder(entityUUID, 36, ChatColor.GOLD + Messages.inventoryName).getInventory();
 
         // Fila 1: Nombre y estado (slots 3, 4, 5)
         inv.setItem(3, createItem(Material.NAME_TAG, ChatColor.GOLD + "Name: " + animalName));
@@ -160,17 +157,6 @@ public class InventoryManager implements Listener {
         inv.setItem(32, createItem(Material.LEATHER_BOOTS, ChatColor.GREEN + "Jump: " + String.format("%.2f", jump)));
 
         player.openInventory(inv);
-    }
-
-    private void addStatBar(Inventory inv, int startSlot, double current, double max, Material filled, Material empty, String label) {
-        int slots = 5;
-        double valuePerSlot = max / (double) slots;
-
-        for (int i = 0; i < slots; i++) {
-            Material mat = current >= (i + 1) * valuePerSlot ? filled : empty;
-            String display = label + ": " + String.format("%.2f", current) + "/" + String.format("%.2f", max);
-            inv.setItem(startSlot + i, createItem(mat, display));
-        }
     }
 
     private ItemStack createItem(Material material, String displayName) {

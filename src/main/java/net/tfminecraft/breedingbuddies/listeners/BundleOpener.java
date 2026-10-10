@@ -42,27 +42,10 @@ public class BundleOpener implements Listener {
     }
     
     public boolean isBundleItem(ItemStack itemInHand, String entityType, Player player) {
-        ConfigurationSection animalSection = bundlesConfig.getConfigurationSection(entityType);
-    	if (bundlesConfig == null || animalSection == null) {
+        if (bundlesConfig.getConfigurationSection(entityType + ".bundles") == null) {
             return false;
         }
-
-        ConfigurationSection bundlesSection = animalSection.getConfigurationSection("bundles");
-        for (String tier : bundlesSection.getKeys(false)) {
-    		String itemType = bundlesConfig.getString(entityType + ".bundles." + tier + ".bundleItem.type");
-        	if (itemType.equalsIgnoreCase("vanilla")) {
-    			String itemId = bundlesConfig.getString(entityType + ".bundles." + tier + ".bundleItem.itemID");
-    			if (itemId != null && itemInHand != null && ItemUtils.getItemId(itemInHand).equalsIgnoreCase(itemId)) {
-                    return true;
-                }
-    		} else if (itemType.equalsIgnoreCase("mmoitem")) {
-    			String mmoitemId = bundlesConfig.getString(entityType + ".bundles." + tier + ".bundleItem.mmoitemID");
-    			if (mmoitemId != null && itemInHand != null && ItemUtils.getItemId(itemInHand).equalsIgnoreCase(mmoitemId)) {
-                    return true;
-                }
-    		}
-        }
-        return false;
+        return getTierFromItem(itemInHand, entityType) != null;
     }
     
     public void openBundle(Player player, ItemStack bundleItem, String entityType) {
