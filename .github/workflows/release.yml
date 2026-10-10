@@ -1,0 +1,18 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/maven-release.yml
+    with:
+      java-version: '21'
+    secrets:
+      DEPS_TOKEN: ${{ secrets.DEPS_TOKEN }}
