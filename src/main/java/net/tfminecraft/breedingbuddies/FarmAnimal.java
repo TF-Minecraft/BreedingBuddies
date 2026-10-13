@@ -19,6 +19,8 @@ public class FarmAnimal {
 	private UUID uuid;
     private String name;
     private Set<UUID> ownersUuids = new HashSet<>();
+    private final Map<UUID, net.tfminecraft.tlibs.character.CharacterRef> ownerRefs = new HashMap<>();
+    public Map<UUID, net.tfminecraft.tlibs.character.CharacterRef> getOwnerRefs() { return ownerRefs; }
 	private int geneticPoints;
     private AnimalStates state;
     private boolean fed = false;
@@ -114,6 +116,7 @@ public class FarmAnimal {
     }
     public void setOwnersUuids (Set<UUID> newOwners) {
         this.ownersUuids = newOwners;
+        ownerRefs.keySet().retainAll(newOwners);
     }
 
     public int getFriendshipPoints() {

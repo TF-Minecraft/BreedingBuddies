@@ -20,6 +20,8 @@ public class BreedingListener implements Listener {
 	public void onEntityBreed(EntityBreedEvent event) {
 		if (event.getBreeder() instanceof Player) {
 			Player player = (Player) event.getBreeder();
+            var session = AnimalIdentity.session(player).orElse(null);
+            if (session == null || !PluginData.ownershipReady()) { event.setCancelled(true); return; }
 			Entity motherEntity = event.getMother();
 			Entity fatherEntity = event.getFather();
 			Entity childEntity = event.getEntity();
@@ -43,6 +45,7 @@ public class BreedingListener implements Listener {
 			if (playerIsOwner) {
 				if (MountUtils.isFullStatMount(childEntity)) {
 					Bukkit.getScheduler().runTaskLater(BreedingBuddies.getInstance(), () -> {
+						if (!AnimalIdentity.current(session, player) || !playerOwnsParents(player, fatherEntity, motherEntity)) return;
 						MountUtils.applyInheritedStats(
 								(LivingEntity) childEntity,
 								(LivingEntity) motherEntity,

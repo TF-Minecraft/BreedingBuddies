@@ -96,11 +96,10 @@ class BreedingBuddiesTest extends PluginTestBase {
 
     @Test
     void savedDataIsLoadedOnEnable() throws Exception {
-        UUID owner = UUID.randomUUID();
+        UUID owner = player().getUniqueId();
         FarmAnimal daisy = new FarmAnimal(UUID.randomUUID(), "Daisy", new HashSet<>());
         daisy.setState(AnimalStates.HAPPY);
-        PluginData.savePlayerData(owner, java.util.Set.of(daisy));
-        PluginData.getPlayerAnimals().clear();
+        OwnershipManager.registerOwnership(owner, daisy);
 
         server.getPluginManager().disablePlugin(plugin);
         PluginData.getPlayerAnimals().clear();
@@ -112,14 +111,14 @@ class BreedingBuddiesTest extends PluginTestBase {
     @Test
     void dataIsAutosavedAndSavedOnDisable() throws Exception {
         PlayerMock alice = player();
-        own(alice, spawn(Cow.class));
+        FarmAnimal saved = own(alice, spawn(Cow.class));
 
         server.getScheduler().performOneTick();
         assertTrue(Files.exists(playerFile(alice.getUniqueId())));
 
-        Files.delete(playerFile(alice.getUniqueId()));
+        saved.setFed(true);
         server.getPluginManager().disablePlugin(plugin);
-        assertTrue(Files.exists(playerFile(alice.getUniqueId())));
+        assertTrue(Files.readString(playerFile(alice.getUniqueId())).contains("\"fed\":true"));
     }
 
     @Test

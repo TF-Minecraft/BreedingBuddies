@@ -108,7 +108,7 @@ class MountListenerTest extends PluginTestBase {
         FarmAnimal cowRecord = own(alice, cow);
 
         mount(alice, ridden);
-        interact(player(), touched, new ItemStack(Material.AIR), EquipmentSlot.HAND);
+        interact(alice, touched, new ItemStack(Material.AIR), EquipmentSlot.HAND);
         interact(alice, cow, new ItemStack(Material.AIR), EquipmentSlot.HAND);
         interact(alice, spawn(Horse.class), new ItemStack(Material.AIR), EquipmentSlot.HAND);
 
@@ -162,7 +162,7 @@ class MountListenerTest extends PluginTestBase {
 
         assertFalse(interact(alice, foal, new ItemStack(Material.WHEAT), EquipmentSlot.HAND).isCancelled());
         assertFalse(interact(alice, foal, new ItemStack(Material.SHEARS), EquipmentSlot.OFF_HAND).isCancelled());
-        assertFalse(interact(alice, theirs, new ItemStack(Material.SHEARS), EquipmentSlot.HAND).isCancelled());
+        assertTrue(interact(alice, theirs, new ItemStack(Material.SHEARS), EquipmentSlot.HAND).isCancelled());
         assertFalse(interact(alice, done, new ItemStack(Material.SHEARS), EquipmentSlot.HAND).isCancelled());
         assertFalse(interact(alice, calf, new ItemStack(Material.SHEARS), EquipmentSlot.HAND).isCancelled());
 

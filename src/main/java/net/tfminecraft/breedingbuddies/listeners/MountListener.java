@@ -30,7 +30,7 @@ public class MountListener implements Listener {
         Player player = (Player) rider;
         if (entity instanceof Animals) {
             //se cancela el evento si el caballo tiene dueño y no es el que interacciona
-            if (OwnershipManager.hasOwner(entity.getUniqueId()) && !OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId())) {
+            if (AnimalIdentity.session(player).isEmpty() || (OwnershipManager.hasOwner(entity.getUniqueId()) && !OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId()))) {
                 SoundManager.playAngryCowSound(entity);
                 event.setCancelled(true);
             }
@@ -42,10 +42,11 @@ public class MountListener implements Listener {
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        if (OwnershipManager.hasOwner(entity.getUniqueId()) && !OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId()) && !(player.hasPermission("breedingbuddies.use") && AnimalIdentity.session(player).isPresent() && !PluginData.isHeld(entity.getUniqueId()))) { event.setCancelled(true); return; }
 
         if(event.getHand().equals(EquipmentSlot.HAND)) {
             if (MountUtils.isFullStatMount(entity) && ItemUtils.getItemId(itemInHand).equalsIgnoreCase(CustomItems.neuterItem)) {
-                if (OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId()) || player.hasPermission("breedingbuddies.use")) {
+                if (AnimalIdentity.session(player).isPresent() && !PluginData.isHeld(entity.getUniqueId()) && (OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId()) || player.hasPermission("breedingbuddies.use"))) {
                     AbstractHorse abstractHorse = (AbstractHorse) entity;
                     FarmAnimal animal = OwnershipManager.getAnimal(entity.getUniqueId(), player.getUniqueId());
 
@@ -68,7 +69,7 @@ public class MountListener implements Listener {
 
         if(event.getHand().equals(EquipmentSlot.HAND)) {
             FarmAnimal animal = OwnershipManager.getAnimal(entity.getUniqueId());
-            if (MountUtils.isFullStatMount(entity) && animal != null) {
+            if (MountUtils.isFullStatMount(entity) && animal != null && OwnershipManager.isOwner(event.getPlayer().getUniqueId(), entity.getUniqueId())) {
                 animal.setStableNeeded(false);
             }
         }

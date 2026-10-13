@@ -73,13 +73,14 @@ public class InventoryManager implements Listener {
     }
 	
     public void openAnimalMenu(Player player, FarmAnimal farmAnimal, Entity entity) {
+        if (AnimalIdentity.session(player).isEmpty() || PluginData.isHeld(farmAnimal.getUuid())) return;
         String animalName = farmAnimal.getName();
         AnimalStates animalStatus = farmAnimal.getState();
         int friendshipPoints = farmAnimal.getFriendshipPoints();
         int geneticPoints = farmAnimal.getGeneticPoints();
 
         UUID entityUUID = entity.getUniqueId();
-        Inventory inv = new AnimalInventoryHolder(entityUUID, 27, ChatColor.GOLD + Messages.inventoryName).getInventory();
+        Inventory inv = new AnimalInventoryHolder(entityUUID, 27, ChatColor.GOLD + Messages.inventoryName, AnimalIdentity.session(player).orElse(null)).getInventory();
 
         // Primera fila: Nombre y Estado
         inv.setItem(3, createItem(Material.NAME_TAG, ChatColor.GOLD + "Name: " + animalName));
@@ -87,7 +88,7 @@ public class InventoryManager implements Listener {
         inv.setItem(5, createItem(Material.TOTEM_OF_UNDYING, ChatColor.GOLD + "State: " + animalStatus.toString()));
 
         Set<UUID> owners = farmAnimal.getOwnersUuids();
-        if (owners.contains(player.getUniqueId()))
+        if (OwnershipManager.isOwner(player.getUniqueId(), entityUUID))
             inv.setItem(26, createItem(Material.WRITABLE_BOOK, ChatColor.DARK_RED + "Remove ownership")); // Slot 36 = índice 35
 
         // Segunda fila: Puntos de amistad
@@ -115,6 +116,7 @@ public class InventoryManager implements Listener {
     }
 
     public void openMountMenu(Player player, LivingEntity entity, FarmAnimal farmAnimal) {
+        if (AnimalIdentity.session(player).isEmpty() || PluginData.isHeld(farmAnimal.getUuid())) return;
         String animalName = farmAnimal.getName();
         AnimalStates animalStatus = farmAnimal.getState();
         int friendshipPoints = farmAnimal.getFriendshipPoints();
@@ -123,7 +125,7 @@ public class InventoryManager implements Listener {
         int pointsPerHeart = maxPoints / 5;
 
         UUID entityUUID = entity.getUniqueId();
-        Inventory inv = new AnimalInventoryHolder(entityUUID, 36, ChatColor.GOLD + Messages.inventoryName).getInventory();
+        Inventory inv = new AnimalInventoryHolder(entityUUID, 36, ChatColor.GOLD + Messages.inventoryName, AnimalIdentity.session(player).orElse(null)).getInventory();
 
         // Fila 1: Nombre y estado (slots 3, 4, 5)
         inv.setItem(3, createItem(Material.NAME_TAG, ChatColor.GOLD + "Name: " + animalName));
@@ -132,7 +134,7 @@ public class InventoryManager implements Listener {
         inv.setItem(8, createItem(Material.SHEARS, ChatColor.GOLD + "Neutered: " + MountUtils.isNeutered(entity)));
 
         Set<UUID> owners = farmAnimal.getOwnersUuids();
-        if (owners.contains(player.getUniqueId()))
+        if (OwnershipManager.isOwner(player.getUniqueId(), entityUUID))
             inv.setItem(35, createItem(Material.WRITABLE_BOOK, ChatColor.DARK_RED + "Remove ownership")); // Slot 36 = índice 35
 
         // Fila 2: Amistad (slots 11–15)
@@ -176,6 +178,7 @@ public class InventoryManager implements Listener {
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null || clicked.getType() != Material.WRITABLE_BOOK) return;
             if (event.getWhoClicked() instanceof Player player) {
+                if (!AnimalIdentity.current(animalHolder.session(), player)) { player.closeInventory(); return; }
                 FarmAnimal animal = OwnershipManager.getAnimal(entityUUID, player.getUniqueId());
                 if (animal != null) {
                     OwnershipManager.removeOwnership(player.getUniqueId(), animal);

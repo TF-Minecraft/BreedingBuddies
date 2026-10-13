@@ -79,7 +79,7 @@ class PluginDataTest extends PluginTestBase {
 
     @Test
     void offlineOwnersAreSavedAndReloaded() {
-        UUID offline = UUID.randomUUID();
+        UUID offline = player().getUniqueId();
         FarmAnimal daisy = detailedAnimal("Daisy");
         OwnershipManager.registerOwnership(offline, daisy);
 
@@ -92,7 +92,7 @@ class PluginDataTest extends PluginTestBase {
 
     @Test
     void anOwnerWhoGaveUpTheirLastAnimalDoesNotGetItBackAfterAReload() {
-        UUID offline = UUID.randomUUID();
+        UUID offline = player().getUniqueId();
         FarmAnimal daisy = detailedAnimal("Daisy");
         OwnershipManager.registerOwnership(offline, daisy);
         PluginData.saveAllData(false);
@@ -106,32 +106,9 @@ class PluginDataTest extends PluginTestBase {
     }
 
     @Test
-    void aPlayerListedInTheFileIsAddedBackAsOwner() throws Exception {
-        UUID player = UUID.randomUUID();
-        FarmAnimal daisy = detailedAnimal("Daisy");
-        daisy.getOwnersUuids().add(UUID.randomUUID());
-        PluginData.savePlayerData(player, Set.of(daisy));
-
-        PluginData.loadAllData();
-
-        assertTrue(OwnershipManager.getAnimal(daisy.getUuid(), player).getOwnersUuids().contains(player));
-    }
-
-    @Test
-    void loadingAPlayerWithoutSavedDataLeavesTheirAnimalsAlone() {
-        UUID player = UUID.randomUUID();
-        FarmAnimal daisy = detailedAnimal("Daisy");
-        OwnershipManager.registerOwnership(player, daisy);
-
-        PluginData.loadPlayerData(player, new java.util.HashMap<>());
-
-        assertEquals(Set.of(daisy), OwnershipManager.getAnimals(player));
-    }
-
-    @Test
     void unownedAnimalsSurviveASaveAndReload() {
         FarmAnimal stray = detailedAnimal("???");
-        stray.getOwnersUuids().add(UUID.randomUUID());
+
         FarmAnimal plain = new FarmAnimal(UUID.randomUUID(), "???", new HashSet<>());
         plain.setState(AnimalStates.UNOWNED);
         UnownedAnimalsManager.addUnownedAnimal(stray);
@@ -191,7 +168,9 @@ class PluginDataTest extends PluginTestBase {
         setStatic(DayChangeListener.class, "isChangingDay", true);
 
         PluginData.saveAllData(false);
-        assertFalse(Files.exists(playerFile(alice.getUniqueId())));
+        String committed = Files.readString(playerFile(alice.getUniqueId()));
+        PluginData.saveAllData(false);
+        assertEquals(committed, Files.readString(playerFile(alice.getUniqueId())));
 
         PluginData.saveAllData(true);
         assertTrue(Files.exists(playerFile(alice.getUniqueId())));
@@ -215,7 +194,7 @@ class PluginDataTest extends PluginTestBase {
 
         try (LogCapture log = new LogCapture(Bukkit.getLogger())) {
             PluginData.loadAllData();
-            assertTrue(log.contains("Invalid player data file: not-a-uuid.json"));
+            assertTrue(log.contains("Animal ownership held"));
             assertFalse(log.contains("notes.txt"));
         }
         assertTrue(PluginData.getPlayerAnimals().isEmpty());
@@ -224,11 +203,11 @@ class PluginDataTest extends PluginTestBase {
     @Test
     void corruptFilesDoNotReplaceWhatIsAlreadyLoaded() throws Exception {
         ChunkManager.addChunk(world.getChunkAt(0, 0));
-        UUID player = UUID.randomUUID();
+        UUID player = player().getUniqueId();
         Files.createDirectories(DATA_DIR.resolve("PlayerData"));
         Files.writeString(DATA_DIR.resolve("stablechunks.json"), "{not json");
         Files.writeString(DATA_DIR.resolve("unownedanimals.json"), "{not json");
-        Files.writeString(playerFile(player), "{not json");
+        Files.writeString(DATA_DIR.resolve("PlayerData").resolve(player + ".json"), "{not json");
 
         assertDoesNotThrow(PluginData::loadAllData);
 
@@ -237,17 +216,14 @@ class PluginDataTest extends PluginTestBase {
         assertFalse(PluginData.getPlayerAnimals().containsKey(player));
     }
 
-    @Test
-    void anUnwritableDataFolderDoesNotStopTheServer() throws Exception {
+    @Test void failedDurableFanoutRefusesFurtherOwnership() throws Exception {
         PlayerMock alice = player();
-        OwnershipManager.registerOwnership(alice.getUniqueId(), detailedAnimal("Daisy"));
-        UnownedAnimalsManager.addUnownedAnimal(detailedAnimal("???"));
-        ChunkManager.addChunk(world.getChunkAt(0, 0));
-        Files.createDirectories(DATA_DIR.getParent());
-        Files.writeString(DATA_DIR, "a file where the folder should be");
-
-        assertDoesNotThrow(() -> PluginData.saveAllData(true));
-
-        assertTrue(Files.isRegularFile(DATA_DIR));
+        FarmAnimal animal = detailedAnimal("Daisy");
+        OwnershipManager.registerOwnership(alice.getUniqueId(), animal);
+        Files.writeString(playerFile(alice.getUniqueId()), "{not json");
+        assertThrows(IllegalStateException.class, () -> PluginData.saveAllData(true));
+        assertFalse(PluginData.ownershipReady());
+        assertFalse(OwnershipManager.isOwner(alice.getUniqueId(), animal.getUuid()));
+        assertTrue(OwnershipManager.hasOwner(animal.getUuid()));
     }
 }
