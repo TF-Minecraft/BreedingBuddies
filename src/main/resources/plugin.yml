@@ -3,10 +3,20 @@ api-version: '1.21.10'
 name: BreedingBuddies
 version: ${project.version}
 author: Nowko
-depend: [MMOItems, MythicLib, TLibs]
+depend: [TLibs, Cooking]
+softdepend: [RPCharacters, MMOCore]
 commands:
   breedingbuddies:
-    description: Main command for the BreedingBuddies plugin.
-    usage: /<command> <subcommand>
-    permission: breedingbuddies.use
-    permission-message: You do not have permission to use this command.
+    description: BreedingBuddies staff commands
+    usage: /breedingbuddies reload | spawn <type> [genetics] [care] | save
+    aliases: [bb]
+    permission: breedingbuddies.admin
+  animals:
+    description: List the animals you own and where they were last seen
+    usage: /animals
+    aliases: [livestock]
+
+permissions:
+  breedingbuddies.admin:
+    description: Staff access to BreedingBuddies commands and to other characters' animals
+    default: op
