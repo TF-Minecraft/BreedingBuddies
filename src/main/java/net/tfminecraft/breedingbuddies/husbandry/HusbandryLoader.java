@@ -72,8 +72,8 @@ public final class HusbandryLoader {
                 parseAmountBands(config.getMapList("amount-from-genetics")));
         HusbandryConfig.setMountSpeedShares(
                 config.getDouble("mounts.speed.min-pct", 0.40),
-                config.getDouble("mounts.speed.genetics-pct", 0.30),
-                config.getDouble("mounts.speed.care-pct", 0.20));
+                config.getDouble("mounts.speed.genetics-pct", 0.50),
+                config.getDouble("mounts.speed.care-pct", 0.10));
         HusbandryConfig.setBreeding(
                 config.getDouble("breeding.genetic-variance-multiplier", 0.4),
                 config.getDouble("breeding.genetic-slowdown-divisor", 0.4),
@@ -314,7 +314,7 @@ public final class HusbandryLoader {
                 1,
                 1,
                 List.of(new HusbandryAmountBand(0, 1, 1)));
-        HusbandryConfig.setMountSpeedShares(0.40, 0.30, 0.20);
+        HusbandryConfig.setMountSpeedShares(0.40, 0.50, 0.10);
         HusbandryConfig.setBreeding(0.4, 0.4, 0.02);
         HusbandryConfig.setStatsRevision("1");
         HusbandryConfig.setRestoreLostAnimals(true);

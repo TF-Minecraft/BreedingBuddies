@@ -104,7 +104,7 @@ public final class HusbandryMounts {
         if (stats == null) {
             return -1;
         }
-        return scaledStat(stats.maxSpeed(), stats.minSpeed(), fractionFor(animal));
+        return scaledStat(stats.maxSpeed(), stats.minSpeed(), fractionFor(animal, HusbandryMountGenes.Stat.SPEED));
     }
 
     public static double healthFor(HusbandryAnimal animal, EntityType type) {
@@ -112,7 +112,7 @@ public final class HusbandryMounts {
         if (stats == null) {
             return -1;
         }
-        return scaledStat(stats.maxHealth(), stats.minHealth(), fractionFor(animal));
+        return scaledStat(stats.maxHealth(), stats.minHealth(), fractionFor(animal, HusbandryMountGenes.Stat.HEALTH));
     }
 
     public static double jumpFor(HusbandryAnimal animal, EntityType type) {
@@ -120,7 +120,7 @@ public final class HusbandryMounts {
         if (stats == null) {
             return -1;
         }
-        return scaledStat(stats.maxJump(), stats.minJump(), fractionFor(animal));
+        return scaledStat(stats.maxJump(), stats.minJump(), fractionFor(animal, HusbandryMountGenes.Stat.JUMP));
     }
 
     public static void applyStats(LivingEntity entity, HusbandryAnimal animal) {
@@ -191,9 +191,10 @@ public final class HusbandryMounts {
         return HusbandryConfig.mountStats(type);
     }
 
-    private static double fractionFor(HusbandryAnimal animal) {
+    /** Each stat follows its own gene; trust adds the configured share on top. */
+    private static double fractionFor(HusbandryAnimal animal, HusbandryMountGenes.Stat stat) {
         return mountFraction(
-                animal.genetics(),
+                HusbandryMountGenes.gene(animal, stat),
                 animal.care(),
                 HusbandryConfig.maxGenetics(),
                 HusbandryConfig.careMax(),

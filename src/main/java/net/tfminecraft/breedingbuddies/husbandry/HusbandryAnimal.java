@@ -24,6 +24,9 @@ public final class HusbandryAnimal {
     private Long shedReadyAt;
     private Long eggReadyAt;
     private Long lastPetAt;
+    private Integer geneHealth;
+    private Integer geneSpeed;
+    private Integer geneJump;
     private long careUpRemainderSeconds;
     private long careDownRemainderSeconds;
     private String statsRevision;
@@ -198,6 +201,25 @@ public final class HusbandryAnimal {
 
     public void setLastPetAt(Long lastPetAt) {
         this.lastPetAt = lastPetAt;
+    }
+
+    public Integer geneHealth() {
+        return geneHealth;
+    }
+
+    public Integer geneSpeed() {
+        return geneSpeed;
+    }
+
+    public Integer geneJump() {
+        return geneJump;
+    }
+
+    /** Mount stat genes; null clears them so the animal's genetics stands in for all three. */
+    public void setMountGenes(Integer health, Integer speed, Integer jump) {
+        this.geneHealth = health;
+        this.geneSpeed = speed;
+        this.geneJump = jump;
     }
 
     public long careUpRemainderSeconds() {

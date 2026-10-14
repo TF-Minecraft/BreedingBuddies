@@ -44,7 +44,10 @@ public final class HusbandryRepository {
                 care_up_remainder INTEGER NOT NULL DEFAULT 0,
                 care_down_remainder INTEGER NOT NULL DEFAULT 0,
                 stats_revision TEXT,
-                last_pet_at INTEGER
+                last_pet_at INTEGER,
+                gene_health INTEGER,
+                gene_speed INTEGER,
+                gene_jump INTEGER
             )
             """;
 
@@ -79,8 +82,8 @@ public final class HusbandryRepository {
                 affliction_elapsed, affliction_at, last_milk_at, wool_ready_at,
                 neutered, loaded_visit_start, mature_at, shed_ready_at, egg_ready_at,
                 care_up_remainder, care_down_remainder, stats_revision,
-                world, x, y, z, last_pet_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                world, x, y, z, last_pet_at, gene_health, gene_speed, gene_jump
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(uuid) DO UPDATE SET
                 type = excluded.type,
                 name = excluded.name,
@@ -107,7 +110,10 @@ public final class HusbandryRepository {
                 x = excluded.x,
                 y = excluded.y,
                 z = excluded.z,
-                last_pet_at = excluded.last_pet_at
+                last_pet_at = excluded.last_pet_at,
+                gene_health = excluded.gene_health,
+                gene_speed = excluded.gene_speed,
+                gene_jump = excluded.gene_jump
             """;
 
     private static final String SELECT_ANIMAL = "SELECT * FROM animals WHERE uuid = ?";
@@ -221,6 +227,11 @@ public final class HusbandryRepository {
         if (!hasColumn("animals", "last_pet_at")) {
             database.execute("ALTER TABLE animals ADD COLUMN last_pet_at INTEGER");
         }
+        for (String gene : List.of("gene_health", "gene_speed", "gene_jump")) {
+            if (!hasColumn("animals", gene)) {
+                database.execute("ALTER TABLE animals ADD COLUMN " + gene + " INTEGER");
+            }
+        }
     }
 
     private boolean hasColumn(String table, String column) {
@@ -249,6 +260,7 @@ public final class HusbandryRepository {
         int max = HusbandryConfig.initialGeneticMax();
         for (HusbandryAnimal animal : stale) {
             animal.setGenetics(max <= 0 ? 0 : rng.nextInt(max + 1));
+            animal.setMountGenes(null, null, null);
             animal.setCare(0);
             animal.setCareUpRemainderSeconds(0);
             animal.setCareDownRemainderSeconds(0);
@@ -477,7 +489,10 @@ public final class HusbandryRepository {
                 animal.hasLocation() ? animal.x() : null,
                 animal.hasLocation() ? animal.y() : null,
                 animal.hasLocation() ? animal.z() : null,
-                animal.lastPetAt());
+                animal.lastPetAt(),
+                animal.geneHealth(),
+                animal.geneSpeed(),
+                animal.geneJump());
     }
 
     private static HusbandryAnimal mapAnimal(ResultSet result) throws SQLException {
@@ -505,6 +520,8 @@ public final class HusbandryRepository {
         animal.setCareDownRemainderSeconds(intOrZero(result, "care_down_remainder"));
         animal.setStatsRevision(nullableString(result, "stats_revision"));
         animal.setLastPetAt(nullableLong(result, "last_pet_at"));
+        animal.setMountGenes(nullableInt(result, "gene_health"), nullableInt(result, "gene_speed"),
+                nullableInt(result, "gene_jump"));
         animal.setStoredLocation(
                 nullableString(result, "world"),
                 nullableInt(result, "x"),

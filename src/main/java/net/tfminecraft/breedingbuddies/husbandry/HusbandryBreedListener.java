@@ -185,6 +185,9 @@ public final class HusbandryBreedListener implements Listener {
         HusbandryAnimal baby = new HusbandryAnimal(uuid, child.getType().name(), name);
         baby.setState(HusbandryAnimalState.UNTAMED);
         baby.setGenetics(genetics);
+        if (HusbandryMounts.isMount(child) && motherAnimal != null && fatherAnimal != null) {
+            HusbandryMountGenes.inherit(baby, motherAnimal, fatherAnimal, feedScale, ThreadLocalRandom.current());
+        }
         baby.setCare(0);
         baby.setStatsRevision(HusbandryConfig.statsRevision());
         baby.setLastProcessedAt(now);

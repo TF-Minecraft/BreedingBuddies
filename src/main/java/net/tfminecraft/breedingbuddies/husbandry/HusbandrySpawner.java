@@ -37,10 +37,15 @@ public final class HusbandrySpawner {
     public static HusbandryAnimal createWildRecord(LivingEntity living) {
         int max = HusbandryConfig.initialGeneticMax();
         int genetics = max <= 0 ? 0 : ThreadLocalRandom.current().nextInt(max + 1);
-        return createRecord(living, genetics, 0);
+        return create(living, genetics, 0, true);
     }
 
+    /** Staff-chosen genetics; a mount gets it for all three stats. */
     public static HusbandryAnimal createRecord(LivingEntity living, int genetics, int care) {
+        return create(living, genetics, care, false);
+    }
+
+    private static HusbandryAnimal create(LivingEntity living, int genetics, int care, boolean wild) {
         if (living == null) {
             return null;
         }
@@ -58,6 +63,13 @@ public final class HusbandrySpawner {
         HusbandryAnimal animal = new HusbandryAnimal(living.getUniqueId(), living.getType().name(), name);
         animal.setState(HusbandryAnimalState.UNTAMED);
         animal.setGenetics(clampedGenetics);
+        if (HusbandryMounts.isMount(living)) {
+            if (wild) {
+                HusbandryMountGenes.rollWild(animal, ThreadLocalRandom.current());
+            } else {
+                HusbandryMountGenes.set(animal, clampedGenetics, clampedGenetics, clampedGenetics);
+            }
+        }
         animal.setCare(clampedCare);
         animal.setStatsRevision(HusbandryConfig.statsRevision());
         animal.setLastProcessedAt(now);
