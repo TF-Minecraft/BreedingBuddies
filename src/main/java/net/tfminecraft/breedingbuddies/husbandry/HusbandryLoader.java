@@ -35,12 +35,9 @@ public final class HusbandryLoader {
         HusbandryConfig.apply(
                 config.getInt("max-animals", 15),
                 config.getInt("care-max", 200),
-                HusbandryDuration.parseCareIntervalSeconds(config, "care.up", "care-up-per-hour", 3600),
-                HusbandryDuration.parseCareAmount(config, "care.up", "care-up-per-hour", 1),
                 HusbandryDuration.parseCareIntervalSeconds(config, "care.down", "care-down-per-hour", 3600),
                 HusbandryDuration.parseCareAmount(config, "care.down", "care-down-per-hour", 1),
                 HusbandryDuration.parseSeconds(config, "decay-grace", "decay-grace-hours", 3600, 86400),
-                HusbandryDuration.parseSeconds(config, "offline-care", "offline-care-hours", 3600, 28800),
                 HusbandryDuration.parseSeconds(config, "long-unload-force", "long-unload-force-hours", 3600, 28800),
                 HusbandryDuration.parseSeconds(config, "min-loaded", "min-loaded-seconds", 1, 60),
                 HusbandryDuration.parseAfflictionHours(config, "mean", "affliction-mean-hours", 6),
@@ -83,6 +80,11 @@ public final class HusbandryLoader {
                 config.getDouble("breeding.care-influence", 0.02));
         HusbandryConfig.setStatsRevision(config.getString("stats-revision", "1"));
         HusbandryConfig.setRestoreLostAnimals(config.getBoolean("restore-lost-animals", true));
+        HusbandryConfig.setTrust(
+                config.getInt("trust.feed", 10),
+                config.getInt("trust.glove", 10),
+                config.getInt("trust.pet", 5),
+                HusbandryDuration.parseSeconds(config, "trust.pet-cooldown", null, 1, 72000));
         HusbandryConfig.setProfessionExp(
                 config.getString("profession", "farming"),
                 parseExpBracket(config.getConfigurationSection("exp"), 6, 8));
@@ -279,10 +281,7 @@ public final class HusbandryLoader {
                 200,
                 3600,
                 1,
-                3600,
-                1,
                 86400,
-                28800,
                 28800,
                 60,
                 6,
@@ -319,6 +318,7 @@ public final class HusbandryLoader {
         HusbandryConfig.setBreeding(0.4, 0.4, 0.02);
         HusbandryConfig.setStatsRevision("1");
         HusbandryConfig.setRestoreLostAnimals(true);
+        HusbandryConfig.setTrust(10, 10, 5, 72000);
         HusbandryConfig.setProfessionExp("farming", HusbandryExpBracket.of(6, 8));
     }
 }

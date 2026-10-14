@@ -1,9 +1,9 @@
 max-animals: 15
+# Trust is shown as five hearts; care-max is full trust.
 care-max: 200
 
 min-loaded: 60s
 decay-grace: 24h
-offline-care: 8h
 long-unload-force: 8h
 milk-timer: 20m
 milk-cooldown: 20m
@@ -18,10 +18,16 @@ affliction:
   min: 4h
   max: 8h
 
+# Trust only grows through an owner's care. A pet is an empty-handed right-click,
+# or riding for mounts, and counts once per pet-cooldown.
+trust:
+  feed: 10
+  glove: 10
+  pet: 5
+  pet-cooldown: 20h
+
+# Neglect costs trust: after decay-grace with Hungry or Dirty, lose this much per interval.
 care:
-  up:
-    interval: 1m
-    amount: 1
   down:
     interval: 10h
     amount: 1

@@ -10,12 +10,9 @@ public final class HusbandryConfig {
 
     private static int maxAnimals = 15;
     private static int careMax = 200;
-    private static int careUpIntervalSeconds = 3600;
-    private static double careUpAmount = 1;
     private static int careDownIntervalSeconds = 3600;
     private static double careDownAmount = 1;
     private static int decayGraceSeconds = 86400;
-    private static int offlineCareSeconds = 28800;
     private static int longUnloadForceSeconds = 28800;
     private static int minLoadedSeconds = 60;
     private static double afflictionMeanHours = 6;
@@ -54,6 +51,10 @@ public final class HusbandryConfig {
     private static double mountSpeedMinPct = 0.40;
     private static double mountSpeedGeneticsPct = 0.30;
     private static double mountSpeedCarePct = 0.20;
+    private static int trustFeed = 10;
+    private static int trustGlove = 10;
+    private static int trustPet = 5;
+    private static int petCooldownSeconds = 72000;
     private static String professionId = "farming";
     private static HusbandryExpBracket defaultExp = HusbandryExpBracket.of(6, 8);
 
@@ -62,12 +63,9 @@ public final class HusbandryConfig {
     public static void apply(
             int maxAnimalsValue,
             int careMaxValue,
-            int careUpIntervalSecondsValue,
-            double careUpAmountValue,
             int careDownIntervalSecondsValue,
             double careDownAmountValue,
             int decayGraceSecondsValue,
-            int offlineCareSecondsValue,
             int longUnloadForceSecondsValue,
             int minLoadedSecondsValue,
             double afflictionMeanHoursValue,
@@ -102,12 +100,9 @@ public final class HusbandryConfig {
             List<HusbandryAmountBand> amountBandsValue) {
         maxAnimals = Math.max(1, maxAnimalsValue);
         careMax = Math.max(1, careMaxValue);
-        careUpIntervalSeconds = Math.max(1, careUpIntervalSecondsValue);
-        careUpAmount = careUpAmountValue;
         careDownIntervalSeconds = Math.max(1, careDownIntervalSecondsValue);
         careDownAmount = careDownAmountValue;
         decayGraceSeconds = Math.max(0, decayGraceSecondsValue);
-        offlineCareSeconds = Math.max(0, offlineCareSecondsValue);
         longUnloadForceSeconds = Math.max(0, longUnloadForceSecondsValue);
         minLoadedSeconds = Math.max(0, minLoadedSecondsValue);
         afflictionMeanHours = afflictionMeanHoursValue;
@@ -156,6 +151,25 @@ public final class HusbandryConfig {
 
     public static void setStatsRevision(String revision) {
         statsRevision = revision == null ? "" : revision.trim();
+    }
+
+    public static void setTrust(int feed, int glove, int pet, int petCooldown) {
+        trustFeed = Math.max(0, feed);
+        trustGlove = Math.max(0, glove);
+        trustPet = Math.max(0, pet);
+        petCooldownSeconds = Math.max(0, petCooldown);
+    }
+
+    public static int trustFor(HusbandryTrust.Gesture gesture) {
+        return switch (gesture) {
+            case FEED -> trustFeed;
+            case GLOVE -> trustGlove;
+            case PET -> trustPet;
+        };
+    }
+
+    public static int petCooldownSeconds() {
+        return petCooldownSeconds;
     }
 
     public static void setRestoreLostAnimals(boolean enabled) {
@@ -210,14 +224,6 @@ public final class HusbandryConfig {
         return careMax;
     }
 
-    public static int careUpIntervalSeconds() {
-        return careUpIntervalSeconds;
-    }
-
-    public static double careUpAmount() {
-        return careUpAmount;
-    }
-
     public static int careDownIntervalSeconds() {
         return careDownIntervalSeconds;
     }
@@ -228,10 +234,6 @@ public final class HusbandryConfig {
 
     public static int decayGraceSeconds() {
         return decayGraceSeconds;
-    }
-
-    public static int offlineCareSeconds() {
-        return offlineCareSeconds;
     }
 
     public static int longUnloadForceSeconds() {

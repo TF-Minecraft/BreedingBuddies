@@ -36,12 +36,26 @@ public final class HusbandryMountListener implements Listener {
             HusbandryClaimHint.remind(player, mount);
             return;
         }
-        if (HusbandryOwnershipService.isOwner(player, mount.getUniqueId())
-                || HusbandryOwnershipService.isStaff(player)) {
+        if (HusbandryOwnershipService.isOwner(player, mount.getUniqueId())) {
+            rideCountsAsPet(player, (LivingEntity) mount);
+            return;
+        }
+        if (HusbandryOwnershipService.isStaff(player)) {
             return;
         }
         event.setCancelled(true);
         player.sendMessage("§cThis is not your animal.");
+    }
+
+    /** Time in the saddle is a mount's daily pet; the right-click that mounts it never reaches petting. */
+    private static void rideCountsAsPet(Player player, LivingEntity living) {
+        HusbandryAnimal animal = HusbandryEntities.lookup(living.getUniqueId()).orElse(null);
+        long now = System.currentTimeMillis();
+        if (animal == null || !HusbandryTrust.canPet(animal, now)) {
+            return;
+        }
+        HusbandryTrust.show(player, living, animal, HusbandryTrust.reward(animal, HusbandryTrust.Gesture.PET, now));
+        HusbandryEntities.repository().upsertAnimal(animal);
     }
 
     @EventHandler

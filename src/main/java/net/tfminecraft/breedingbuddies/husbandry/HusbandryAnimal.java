@@ -23,6 +23,7 @@ public final class HusbandryAnimal {
     private Long matureAt;
     private Long shedReadyAt;
     private Long eggReadyAt;
+    private Long lastPetAt;
     private long careUpRemainderSeconds;
     private long careDownRemainderSeconds;
     private String statsRevision;
@@ -189,6 +190,14 @@ public final class HusbandryAnimal {
 
     public void setEggReadyAt(Long eggReadyAt) {
         this.eggReadyAt = eggReadyAt;
+    }
+
+    public Long lastPetAt() {
+        return lastPetAt;
+    }
+
+    public void setLastPetAt(Long lastPetAt) {
+        this.lastPetAt = lastPetAt;
     }
 
     public long careUpRemainderSeconds() {

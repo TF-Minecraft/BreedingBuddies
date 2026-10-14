@@ -186,16 +186,16 @@ class HusbandryRuntimeCoverageTest {
         animal.setLastProcessedAt(100); HusbandrySimulator.tickLoaded(animal, 50); assertEquals(50, animal.lastProcessedAt()); HusbandrySimulator.tickLoaded(animal, 50, null); assertEquals(50, animal.lastProcessedAt());
     }
 
-    @Test void unloadedCareIsCappedAndLongAbsencesApplyEachMissingAffliction() throws Exception {
-        f.config.set("offline-care", "2h"); f.config.set("long-unload-force", "3h"); f.config.set("affliction-min-hours", 4); f.config.set("affliction-max-hours", 4); f.reload();
+    @Test void longAbsencesApplyEachMissingAfflictionWithoutGrantingTrust() throws Exception {
+        f.config.set("long-unload-force", "3h"); f.config.set("affliction-min-hours", 4); f.config.set("affliction-max-hours", 4); f.reload();
         for (boolean firstHungry : List.of(true, false)) {
             Random random = mock(Random.class); when(random.nextBoolean()).thenReturn(firstHungry);
             HusbandryAnimal animal = simulationAnimal(); animal.setUnloadedAt(0L);
-            HusbandrySimulator.catchUp(animal, 4 * 3_600_000L, random); assertEquals(2, animal.care()); assertEquals(firstHungry, animal.hungrySince() != null); assertEquals(!firstHungry, animal.dirtySince() != null); assertEquals(4, animal.afflictionAt());
+            HusbandrySimulator.catchUp(animal, 4 * 3_600_000L, random); assertEquals(0, animal.care()); assertEquals(firstHungry, animal.hungrySince() != null); assertEquals(!firstHungry, animal.dirtySince() != null); assertEquals(4, animal.afflictionAt());
             animal.setUnloadedAt(animal.lastProcessedAt()); HusbandrySimulator.catchUp(animal, 8 * 3_600_000L, random); assertNotNull(animal.hungrySince()); assertNotNull(animal.dirtySince());
             animal.setUnloadedAt(animal.lastProcessedAt()); HusbandrySimulator.catchUp(animal, 12 * 3_600_000L, random); assertEquals(0, animal.afflictionElapsed());
         }
-        HusbandryAnimal split = simulationAnimal(); split.setUnloadedAt(3_600_000L); HusbandrySimulator.catchUp(split, 2 * 3_600_000L, new Random(1)); assertEquals(2, split.care());
+        HusbandryAnimal split = simulationAnimal(); split.setUnloadedAt(3_600_000L); HusbandrySimulator.catchUp(split, 2 * 3_600_000L, new Random(1)); assertEquals(0, split.care());
     }
 
     @Test void loadedAfflictionCyclesChooseEitherFirstStateAndEventuallyBoth() throws Exception {
@@ -215,7 +215,7 @@ class HusbandryRuntimeCoverageTest {
         HusbandrySimulator.tickLoaded(animal, 2 * 3_600_000, new Random(1)); assertEquals(2, animal.care()); assertEquals(0, animal.careDownRemainderSeconds());
         animal.setHungrySince(0L); HusbandrySimulator.tickLoaded(animal, 10 * 3_600_000, new Random(1)); assertEquals(0, animal.care());
         HusbandryAnimal healthy = simulationAnimal(); healthy.setCare(100); HusbandrySimulator.tickLoaded(healthy, 3_600_000, new Random(1)); assertEquals(100, healthy.care());
-        f.config.set("care-up-per-hour", 0); f.reload(); healthy.setCare(5); HusbandrySimulator.tickLoaded(healthy, 3_600_001, new Random(1)); HusbandrySimulator.tickLoaded(healthy, 2 * 3_600_000, new Random(1)); assertEquals(5, healthy.care());
+        healthy.setCare(5); HusbandrySimulator.tickLoaded(healthy, 3_600_001, new Random(1)); HusbandrySimulator.tickLoaded(healthy, 2 * 3_600_000, new Random(1)); assertEquals(5, healthy.care());
     }
 
     @Test void mountEnrollmentAndScalingPreserveExistingRecordsAndRespectAttributeSupport() {
@@ -234,7 +234,7 @@ class HusbandryRuntimeCoverageTest {
     }
 
     @Test void periodicTickPersistsCareAndSnapshotsThenStopsCleanly() {
-        Horse horse = f.spawn(Horse.class); HusbandryAnimal animal = f.record(horse); f.own(animal, f.player); animal.setLastProcessedAt(System.currentTimeMillis() - 3_600_000); animal.setLoadedVisitStart(1L);
+        Horse horse = f.spawn(Horse.class); HusbandryAnimal animal = f.record(horse); f.own(animal, f.player); animal.setLastProcessedAt(System.currentTimeMillis() - 3_600_000); animal.setLoadedVisitStart(1L); animal.setCare(7);
         Cow recent = f.spawn(Cow.class); HusbandryAnimal notVisited = f.record(recent); notVisited.setLoadedVisitStart(System.currentTimeMillis()); long unchanged = notVisited.lastProcessedAt();
         Cow refused = f.spawn(Cow.class); HusbandryAnimal cannotCapture = f.record(refused); f.own(cannotCapture, f.player);
         HusbandryAnimal gone = f.offline("COW", "Gone"); HusbandryEntities.putLoaded(gone);
@@ -242,7 +242,7 @@ class HusbandryRuntimeCoverageTest {
         UnsafeValues unsafe = mock(UnsafeValues.class); when(unsafe.serializeEntity(horse)).thenReturn(new byte[]{3}); when(unsafe.serializeEntity(refused)).thenThrow(new IllegalArgumentException("unavailable"));
         try (MockedStatic<Bukkit> bukkit = mockStatic(Bukkit.class, CALLS_REAL_METHODS)) {
             bukkit.when(Bukkit::getUnsafe).thenReturn(unsafe); HusbandryTickTask.start(); HusbandryTickTask.start(); f.server.getScheduler().performTicks(1200);
-            assertEquals(1, f.repository.getAnimal(animal.uuid()).orElseThrow().care()); assertEquals(unchanged, notVisited.lastProcessedAt()); assertArrayEquals(new byte[]{3}, f.repository.getSnapshot(animal.uuid()).orElseThrow().data()); assertTrue(f.repository.getSnapshot(cannotCapture.uuid()).isEmpty());
+            assertEquals(7, f.repository.getAnimal(animal.uuid()).orElseThrow().care(), "The tick saves loaded animals"); assertEquals(unchanged, notVisited.lastProcessedAt()); assertArrayEquals(new byte[]{3}, f.repository.getSnapshot(animal.uuid()).orElseThrow().data()); assertTrue(f.repository.getSnapshot(cannotCapture.uuid()).isEmpty());
             assertTrue(HusbandryEntities.getLoaded(gone.uuid()).isEmpty()); assertTrue(HusbandryEntities.getLoaded(nonLiving.uuid()).isEmpty());
             doThrow(new SqliteDatabaseException("tick write failure")).when(f.repository).upsertAnimals(anyList());
             doThrow(new SqliteDatabaseException("snapshot write failure")).when(f.repository).upsertSnapshots(anyMap(), anyLong());

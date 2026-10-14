@@ -75,7 +75,6 @@ public final class HusbandrySimulator {
             return;
         }
 
-        boolean happyAtStart = isHappy(animal);
         long elapsedMillis = nowMillis - animal.lastProcessedAt();
         long unloadedMillis = 0L;
         if (includeUnloaded && animal.unloadedAt() != null) {
@@ -84,15 +83,8 @@ public final class HusbandrySimulator {
         long loadedMillis = Math.max(0L, elapsedMillis - unloadedMillis);
         double loadedHours = loadedMillis / (double) MILLIS_PER_HOUR;
 
-        if (happyAtStart && unloadedMillis > 0) {
-            long cappedSeconds = Math.min(unloadedMillis / 1000L, HusbandryConfig.offlineCareSeconds());
-            applyCareJumps(animal, cappedSeconds, HusbandryConfig.careUpIntervalSeconds(), HusbandryConfig.careUpAmount());
-        }
         if (unloadedMillis / 1000L > HusbandryConfig.longUnloadForceSeconds()) {
             applyLongUnloadForce(animal, nowMillis, rng);
-        }
-        if (happyAtStart && loadedMillis > 0) {
-            applyCareJumps(animal, loadedMillis / 1000L, HusbandryConfig.careUpIntervalSeconds(), HusbandryConfig.careUpAmount());
         }
         applyAffliction(animal, loadedHours, nowMillis, rng);
         applyDecay(animal, animal.lastProcessedAt(), nowMillis);
@@ -113,27 +105,21 @@ public final class HusbandrySimulator {
             return;
         }
         long decaySeconds = (nowMillis - decayFrom) / 1000L;
-        applyCareJumps(animal, decaySeconds, HusbandryConfig.careDownIntervalSeconds(), -HusbandryConfig.careDownAmount());
+        applyDecayJumps(animal, decaySeconds, HusbandryConfig.careDownIntervalSeconds(), HusbandryConfig.careDownAmount());
     }
 
-    private static void applyCareJumps(HusbandryAnimal animal, long elapsedSeconds, int intervalSeconds, double amount) {
-        if (elapsedSeconds <= 0 || intervalSeconds <= 0 || amount == 0) {
+    /** Trust is only earned by care actions (HusbandryTrust); time only takes it away from neglected animals. */
+    private static void applyDecayJumps(HusbandryAnimal animal, long elapsedSeconds, int intervalSeconds, double amount) {
+        if (elapsedSeconds <= 0 || intervalSeconds <= 0 || amount <= 0) {
             return;
         }
-        boolean up = amount > 0;
-        long remainder = up ? animal.careUpRemainderSeconds() : animal.careDownRemainderSeconds();
-        remainder += elapsedSeconds;
+        long remainder = animal.careDownRemainderSeconds() + elapsedSeconds;
         long jumps = remainder / intervalSeconds;
-        remainder = remainder % intervalSeconds;
-        if (up) {
-            animal.setCareUpRemainderSeconds(remainder);
-        } else {
-            animal.setCareDownRemainderSeconds(remainder);
-        }
+        animal.setCareDownRemainderSeconds(remainder % intervalSeconds);
         if (jumps <= 0) {
             return;
         }
-        addCare(animal, jumps * amount);
+        addCare(animal, -jumps * amount);
     }
 
     private static void applyLongUnloadForce(HusbandryAnimal animal, long nowMillis, Random random) {

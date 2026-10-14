@@ -43,7 +43,8 @@ public final class HusbandryRepository {
                 egg_ready_at INTEGER,
                 care_up_remainder INTEGER NOT NULL DEFAULT 0,
                 care_down_remainder INTEGER NOT NULL DEFAULT 0,
-                stats_revision TEXT
+                stats_revision TEXT,
+                last_pet_at INTEGER
             )
             """;
 
@@ -78,8 +79,8 @@ public final class HusbandryRepository {
                 affliction_elapsed, affliction_at, last_milk_at, wool_ready_at,
                 neutered, loaded_visit_start, mature_at, shed_ready_at, egg_ready_at,
                 care_up_remainder, care_down_remainder, stats_revision,
-                world, x, y, z
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                world, x, y, z, last_pet_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(uuid) DO UPDATE SET
                 type = excluded.type,
                 name = excluded.name,
@@ -105,7 +106,8 @@ public final class HusbandryRepository {
                 world = excluded.world,
                 x = excluded.x,
                 y = excluded.y,
-                z = excluded.z
+                z = excluded.z,
+                last_pet_at = excluded.last_pet_at
             """;
 
     private static final String SELECT_ANIMAL = "SELECT * FROM animals WHERE uuid = ?";
@@ -214,6 +216,10 @@ public final class HusbandryRepository {
                 database.execute("ALTER TABLE animals ADD COLUMN z INTEGER");
             }
             database.execute("PRAGMA user_version = 8");
+        }
+        // BreedingBuddies columns are checked by name, not user_version, so Cooking's numbering can never skip them.
+        if (!hasColumn("animals", "last_pet_at")) {
+            database.execute("ALTER TABLE animals ADD COLUMN last_pet_at INTEGER");
         }
     }
 
@@ -470,7 +476,8 @@ public final class HusbandryRepository {
                 animal.hasLocation() ? animal.world() : null,
                 animal.hasLocation() ? animal.x() : null,
                 animal.hasLocation() ? animal.y() : null,
-                animal.hasLocation() ? animal.z() : null);
+                animal.hasLocation() ? animal.z() : null,
+                animal.lastPetAt());
     }
 
     private static HusbandryAnimal mapAnimal(ResultSet result) throws SQLException {
@@ -497,6 +504,7 @@ public final class HusbandryRepository {
         animal.setCareUpRemainderSeconds(intOrZero(result, "care_up_remainder"));
         animal.setCareDownRemainderSeconds(intOrZero(result, "care_down_remainder"));
         animal.setStatsRevision(nullableString(result, "stats_revision"));
+        animal.setLastPetAt(nullableLong(result, "last_pet_at"));
         animal.setStoredLocation(
                 nullableString(result, "world"),
                 nullableInt(result, "x"),

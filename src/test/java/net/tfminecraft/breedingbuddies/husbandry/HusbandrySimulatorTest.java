@@ -15,44 +15,31 @@ class HusbandrySimulatorTest {
     private static final long HOUR = 3_600_000L;
 
     @Test
-    void fiftyNineMinuteTicksDoNotGrantCare() {
-        HusbandryAnimal animal = happyAnimal(0);
+    void happyLoadedTimeNeverGrantsTrust() {
+        HusbandryAnimal animal = happyAnimal(40);
         long now = animal.lastProcessedAt();
-        for (int i = 1; i <= 59; i++) {
+        for (int i = 1; i <= 120; i++) {
             HusbandrySimulator.tickLoaded(animal, now + i * MINUTE, new Random(1));
         }
-        assertEquals(0, animal.care());
-        assertEquals(59 * 60L, animal.careUpRemainderSeconds());
+        assertEquals(40, animal.care());
+        assertTrue(HusbandrySimulator.isHappy(animal));
     }
 
     @Test
-    void sixtiethMinuteTickGrantsOneCare() {
-        HusbandryAnimal animal = happyAnimal(0);
-        long now = animal.lastProcessedAt();
-        for (int i = 1; i <= 60; i++) {
-            HusbandrySimulator.tickLoaded(animal, now + i * MINUTE, new Random(1));
-        }
-        assertEquals(1, animal.care());
-        assertEquals(0, animal.careUpRemainderSeconds());
+    void happyUnloadedTimeNeverGrantsTrust() {
+        HusbandryAnimal animal = happyAnimal(40);
+        animal.setUnloadedAt(animal.lastProcessedAt());
+        HusbandrySimulator.catchUp(animal, animal.lastProcessedAt() + 2 * HOUR, new Random(1));
+        assertEquals(40, animal.care());
     }
 
     @Test
-    void twoHourSliceGrantsTwoCare() {
-        HusbandryAnimal animal = happyAnimal(0);
-        long now = animal.lastProcessedAt();
-        HusbandrySimulator.tickLoaded(animal, now + 2 * HOUR, new Random(1));
-        assertEquals(2, animal.care());
-        assertEquals(0, animal.careUpRemainderSeconds());
-    }
-
-    @Test
-    void happyTimeGrantsCareBeforeAfflictionInSameSlice() {
-        HusbandryAnimal animal = happyAnimal(0);
+    void loadedTimeStillBringsAfflictionsWithoutChangingTrust() {
+        HusbandryAnimal animal = happyAnimal(40);
         animal.setAfflictionAt(0.001);
         animal.setAfflictionElapsed(0);
-        long now = animal.lastProcessedAt();
-        HusbandrySimulator.tickLoaded(animal, now + 2 * HOUR, new Random(1));
-        assertEquals(2, animal.care());
+        HusbandrySimulator.tickLoaded(animal, animal.lastProcessedAt() + 2 * HOUR, new Random(1));
+        assertEquals(40, animal.care());
         assertFalse(HusbandrySimulator.isHappy(animal));
         assertTrue(animal.hungrySince() != null || animal.dirtySince() != null);
     }

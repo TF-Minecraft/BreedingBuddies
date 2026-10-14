@@ -24,11 +24,10 @@ public class HusbandryLoaderCoverageTest {
         load("""
                 max-animals: 3
                 care-max: 120
+                trust: {feed: 7, glove: 8, pet: 9, pet-cooldown: 2h}
                 care:
-                  up: {interval: 2m, amount: 2.5}
                   down: {interval: 30s, amount: 0.75}
                 decay-grace: 1h
-                offline-care: 2h
                 long-unload-force: 3h
                 min-loaded: 5m
                 affliction: {mean: 10h, min: 2h, max: 1h}
@@ -92,9 +91,9 @@ public class HusbandryLoaderCoverageTest {
                   invalid-mount: {}
                 """);
         assertEquals(3, HusbandryConfig.maxAnimals()); assertEquals(120, HusbandryConfig.careMax());
-        assertEquals(120, HusbandryConfig.careUpIntervalSeconds()); assertEquals(2.5, HusbandryConfig.careUpAmount());
+        assertEquals(7, HusbandryConfig.trustFor(HusbandryTrust.Gesture.FEED)); assertEquals(8, HusbandryConfig.trustFor(HusbandryTrust.Gesture.GLOVE)); assertEquals(9, HusbandryConfig.trustFor(HusbandryTrust.Gesture.PET)); assertEquals(7200, HusbandryConfig.petCooldownSeconds());
         assertEquals(30, HusbandryConfig.careDownIntervalSeconds()); assertEquals(0.75, HusbandryConfig.careDownAmount());
-        assertEquals(3600, HusbandryConfig.decayGraceSeconds()); assertEquals(7200, HusbandryConfig.offlineCareSeconds()); assertEquals(10800, HusbandryConfig.longUnloadForceSeconds()); assertEquals(300, HusbandryConfig.minLoadedSeconds());
+        assertEquals(3600, HusbandryConfig.decayGraceSeconds()); assertEquals(10800, HusbandryConfig.longUnloadForceSeconds()); assertEquals(300, HusbandryConfig.minLoadedSeconds());
         assertEquals(10, HusbandryConfig.afflictionMeanHours()); assertEquals(2, HusbandryConfig.afflictionMinHours()); assertEquals(2, HusbandryConfig.afflictionMaxHours());
         assertEquals(180, HusbandryConfig.milkCooldownSeconds()); assertEquals(5, HusbandryConfig.initialGeneticMax()); assertEquals(900, HusbandryConfig.maxGenetics()); assertEquals(2, HusbandryConfig.minRoastCuts());
         assertEquals(180, HusbandryConfig.milkTimerSeconds());
@@ -132,10 +131,8 @@ public class HusbandryLoaderCoverageTest {
 
     @Test void legacyDurationsAndEmptySectionsRemainSupported() throws Exception {
         load("""
-                care-up-per-hour: 2
                 care-down-per-hour: 3
                 decay-grace-hours: 2.5
-                offline-care-hours: 3
                 long-unload-force-hours: 4
                 min-loaded-seconds: 5
                 affliction-mean-hours: 7
@@ -144,12 +141,13 @@ public class HusbandryLoaderCoverageTest {
                 milk-cooldown-minutes: 6
                 wool-timer-hours: 7
                 """);
-        assertEquals(3600, HusbandryConfig.careUpIntervalSeconds()); assertEquals(2, HusbandryConfig.careUpAmount()); assertEquals(3600, HusbandryConfig.careDownIntervalSeconds()); assertEquals(3, HusbandryConfig.careDownAmount());
-        assertEquals(9000, HusbandryConfig.decayGraceSeconds()); assertEquals(10800, HusbandryConfig.offlineCareSeconds()); assertEquals(14400, HusbandryConfig.longUnloadForceSeconds()); assertEquals(5, HusbandryConfig.minLoadedSeconds());
+        assertEquals(3600, HusbandryConfig.careDownIntervalSeconds()); assertEquals(3, HusbandryConfig.careDownAmount());
+        assertEquals(9000, HusbandryConfig.decayGraceSeconds()); assertEquals(14400, HusbandryConfig.longUnloadForceSeconds()); assertEquals(5, HusbandryConfig.minLoadedSeconds());
         assertEquals(7, HusbandryConfig.afflictionMeanHours()); assertEquals(5, HusbandryConfig.afflictionMinHours()); assertEquals(9, HusbandryConfig.afflictionMaxHours()); assertEquals(360, HusbandryConfig.milkCooldownSeconds()); assertEquals(25200, HusbandryConfig.woolTimerSeconds());
         assertTrue(HusbandryConfig.species().isEmpty()); assertTrue(HusbandryConfig.mounts().isEmpty()); assertTrue(HusbandryConfig.qualityBands().isEmpty());
         load("milk-cooldown: 2m\n"); assertEquals(120, HusbandryConfig.milkCooldownSeconds());
         load(""); assertEquals(1200, HusbandryConfig.milkCooldownSeconds()); assertEquals(86400, HusbandryConfig.decayGraceSeconds()); assertEquals(6, HusbandryConfig.expFor(null).min());
+        assertEquals(10, HusbandryConfig.trustFor(HusbandryTrust.Gesture.FEED)); assertEquals(5, HusbandryConfig.trustFor(HusbandryTrust.Gesture.PET)); assertEquals(72000, HusbandryConfig.petCooldownSeconds());
     }
 
     @Test void missingAndMalformedFilesResetToTheSameDefaultsAsEmptyYaml() throws Exception {
@@ -165,16 +163,17 @@ public class HusbandryLoaderCoverageTest {
         Map<EntityType, HusbandrySpecies> species = new HashMap<>();
         List<HusbandryQualityBand> quality = new ArrayList<>(List.of(new HusbandryQualityBand(0, 2)));
         List<HusbandryAmountBand> amounts = new ArrayList<>(List.of(new HusbandryAmountBand(0, 3, 4)));
-        HusbandryConfig.apply(-1, 0, 0, 2, -1, 3, -1, -1, -1, -1, 6, 4, 2, -1, -1, 0, -1, -1, -1, -1, 2, -1,
+        HusbandryConfig.apply(-1, 0, -1, 3, -1, -1, -1, 6, 4, 2, -1, -1, 0, -1, -1, -1, -1, 2, -1,
                 null, null, null, null, null, null, null, removed, species, true, true, true, true, quality, Map.of(), 0.4, 0.6, amounts);
         removed.clear(); species.put(EntityType.PIG, species(EntityType.PIG)); quality.clear(); amounts.clear();
-        assertEquals(1, HusbandryConfig.maxAnimals()); assertEquals(1, HusbandryConfig.careMax()); assertEquals(1, HusbandryConfig.careUpIntervalSeconds()); assertEquals(1, HusbandryConfig.careDownIntervalSeconds()); assertEquals(4, HusbandryConfig.afflictionMaxHours()); assertEquals(1, HusbandryConfig.maxGenetics());
-        assertEquals(0, HusbandryConfig.decayGraceSeconds()); assertEquals(0, HusbandryConfig.offlineCareSeconds()); assertEquals(0, HusbandryConfig.longUnloadForceSeconds()); assertEquals(0, HusbandryConfig.minLoadedSeconds()); assertEquals(0, HusbandryConfig.milkCooldownSeconds()); assertEquals(0, HusbandryConfig.initialGeneticMax()); assertEquals(0, HusbandryConfig.minRoastCuts()); assertEquals(0, HusbandryConfig.woolTimerSeconds()); assertEquals(0, HusbandryConfig.growUpSeconds()); assertEquals(0, HusbandryConfig.shedTimerSeconds()); assertEquals(0, HusbandryConfig.eggTimerSeconds()); assertEquals(1, HusbandryConfig.shedChance());
+        assertEquals(1, HusbandryConfig.maxAnimals()); assertEquals(1, HusbandryConfig.careMax()); assertEquals(1, HusbandryConfig.careDownIntervalSeconds()); assertEquals(4, HusbandryConfig.afflictionMaxHours()); assertEquals(1, HusbandryConfig.maxGenetics());
+        assertEquals(0, HusbandryConfig.decayGraceSeconds()); assertEquals(0, HusbandryConfig.longUnloadForceSeconds()); assertEquals(0, HusbandryConfig.minLoadedSeconds()); assertEquals(0, HusbandryConfig.milkCooldownSeconds()); assertEquals(0, HusbandryConfig.initialGeneticMax()); assertEquals(0, HusbandryConfig.minRoastCuts()); assertEquals(0, HusbandryConfig.woolTimerSeconds()); assertEquals(0, HusbandryConfig.growUpSeconds()); assertEquals(0, HusbandryConfig.shedTimerSeconds()); assertEquals(0, HusbandryConfig.eggTimerSeconds()); assertEquals(1, HusbandryConfig.shedChance());
         assertEquals(List.of("", "", "", "", "", "", ""), List.of(HusbandryConfig.tameItem(), HusbandryConfig.coOwnItem(), HusbandryConfig.feedItem(), HusbandryConfig.gloveItem(), HusbandryConfig.neuterItem(), HusbandryConfig.inspectItem(), HusbandryConfig.mountStatsItem()));
         assertEquals(Set.of(EntityType.COW), HusbandryConfig.removeUnowned()); assertTrue(HusbandryConfig.species().isEmpty()); assertEquals(2, HusbandryConfig.starsForGenetics(0)); assertEquals(3, HusbandryConfig.roastCutsFor(0)); assertEquals(4, HusbandryConfig.woolFor(0));
+        HusbandryConfig.setTrust(-1, -2, -3, -4); assertEquals(0, HusbandryConfig.trustFor(HusbandryTrust.Gesture.FEED)); assertEquals(0, HusbandryConfig.trustFor(HusbandryTrust.Gesture.GLOVE)); assertEquals(0, HusbandryConfig.trustFor(HusbandryTrust.Gesture.PET)); assertEquals(0, HusbandryConfig.petCooldownSeconds());
         HusbandryConfig.setMountSpeedShares(-1, -2, -3); assertEquals(0, HusbandryConfig.mountSpeedMinPct()); assertEquals(0, HusbandryConfig.mountSpeedGeneticsPct()); assertEquals(0, HusbandryConfig.mountSpeedCarePct());
         HusbandryConfig.setBreeding(-1, 0.2, -3); assertEquals(0, HusbandryConfig.geneticVarianceMultiplier()); assertEquals(0.2, HusbandryConfig.geneticSlowdownDivisor()); assertEquals(0, HusbandryConfig.careInfluence());
-        HusbandryConfig.setStatsRevision(null); HusbandryConfig.setProfessionExp(null, null); assertEquals("", HusbandryConfig.statsRevision()); assertEquals("", HusbandryConfig.professionId()); assertEquals(6, HusbandryConfig.expFor(null).min()); assertEquals(8, HusbandryConfig.expFor(null).max());
+        HusbandryConfig.setStatsRevision(null); HusbandryConfig.setProfessionExp(null, null); assertEquals("", HusbandryConfig.statsRevision()); assertEquals("", HusbandryConfig.professionId()); assertEquals(6, HusbandryConfig.expFor(null).min());
         assertEquals(0, HusbandryConfig.resolveMilkTimerSeconds(0, -1)); assertEquals(2, HusbandryConfig.resolveMilkTimerSeconds(2, -1)); assertEquals(0, HusbandryConfig.resolveWoolTimerSeconds(0, -1)); assertEquals(2, HusbandryConfig.resolveWoolTimerSeconds(2, -1));
     }
 
