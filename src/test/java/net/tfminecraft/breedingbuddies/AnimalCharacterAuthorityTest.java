@@ -54,12 +54,12 @@ class AnimalCharacterAuthorityTest extends PluginTestBase {
         assertFalse(AnimalIdentity.supports(broken,false));
     }
     @Test void retainedCompatibilitySavesPreserveCharacterAuthorityAndUnloadableRawRows() throws Exception {
-        var player=player();Cow cow=spawn(Cow.class);FarmAnimal animal=own(player,cow);
+        var player=player();var current=select(player,UUID.randomUUID(),2);Cow cow=spawn(Cow.class);FarmAnimal animal=own(player,cow);
         PluginData.savePlayerData(player.getUniqueId(),Set.of(animal));PluginData.saveAllPlayerData();PluginData.saveUnownedAnimals();
         PluginData.loadPlayerData(player.getUniqueId(),new HashMap<>());PluginData.loadAllPlayerData();PluginData.loadUnownedAnimals();
         assertTrue(OwnershipManager.isOwner(player.getUniqueId(),cow.getUniqueId()));
         PluginData.ownership().rows.get(cow.getUniqueId()).put("state","FUTURE_STATE");
-        java.nio.file.Files.writeString(playerFile(player.getUniqueId()),PluginData.ownership().documents.get("CharacterData/"+player.getUniqueId()+".json").toJSONString());
+        java.nio.file.Files.writeString(playerFile(current.ref().characterId()),PluginData.ownership().documents.get("CharacterData/"+current.ref().characterId()+".json").toJSONString());
         PluginData.loadAllData();
         assertTrue(PluginData.isHeld(cow.getUniqueId()));assertNull(OwnershipManager.getAnimal(cow.getUniqueId()));
         PluginData.saveAllData(true);PluginData.loadAllData();assertEquals("FUTURE_STATE",PluginData.ownership().rows.get(cow.getUniqueId()).get("state"));

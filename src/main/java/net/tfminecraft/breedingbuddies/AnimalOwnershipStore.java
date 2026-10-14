@@ -99,11 +99,13 @@ final class AnimalOwnershipStore {
         JSONObject canonical = new JSONObject();
         rows.forEach((id, row) -> { if (!held.containsKey(id)) canonical.put(id.toString(), AnimalFiles.copy(row)); });
         journal.put("canonical", canonical);
+        boolean unfinishedToken = false;
         if (!"migration".equals(journal.get("kind"))) {
             JSONObject holding = new JSONObject();held.forEach((id, reason) -> holding.put(id.toString(), reason));journal.put("held", holding);
             JSONObject tokens = new JSONObject();
             for (Path receipt : files("ownership/token-effects")) {
                 JSONObject effect = AnimalFiles.object(Files.readString(receipt));
+                if (!"done".equals(effect.get("status"))) unfinishedToken = true;
                 if (held.containsKey(UUID.fromString((String) effect.get("animal"))) && !"done".equals(effect.get("status"))) {
                     if (!receipt.getFileName().toString().equals(effect.get("id") + ".json")) throw new IOException("Token effect ID/path conflict");
                     tokens.put(effect.get("id"), effect);
@@ -122,6 +124,18 @@ final class AnimalOwnershipStore {
         }
         journal.put("outputs", writes);
         Path receipt = path("ownership/journals/" + id + ".json");
+        if ("gameplay".equals(journal.get("kind")) && tokenEffectId == null && !unfinishedToken
+            && writes.stream().allMatch(value -> Objects.equals(((JSONObject) value).get("before"), ((JSONObject) value).get("after")))) {
+            verifySources();
+            Set<String> inventory = new HashSet<>();
+            for (Path current : files("CharacterData")) inventory.add(relative(current));
+            if (Files.exists(path("character-unowned.json"))) inventory.add("character-unowned.json");
+            if (!inventory.equals(expected.keySet())) throw new IOException("Post-load animal file inventory changed");
+            for (Path pending : files("ownership/journals"))
+                if (!Boolean.TRUE.equals(AnimalFiles.object(Files.readString(pending)).get("done"))) throw new IOException("Unfinished animal journal " + pending.getFileName());
+            validateReceipt(receipt, journal);
+            return;
+        }
         AnimalFiles.write(receipt, journal.toJSONString());
         ready = false;
         publish(receipt, journal);

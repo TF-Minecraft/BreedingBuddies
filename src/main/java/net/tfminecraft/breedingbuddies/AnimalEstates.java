@@ -94,7 +94,7 @@ final class AnimalEstates implements EstateParticipant {
                 estate.put("from", AnimalOwnershipStore.ref(decision.testator())); estate.put("to", AnimalOwnershipStore.ref(target));
                 JSONObject metadata = new JSONObject(); metadata.put("kind", "estate"); metadata.put("estate", estate); metadata.put("animals", current); metadata.put("canonical", canonical);
                 try { store.rows.putAll(planned); store.commit(store.fanout(), metadata); store.load(); PluginData.rebuildAnimals(); }
-                catch (IOException failure) { store.rows.clear(); store.rows.putAll(original); throw failure; }
+                catch (IOException | RuntimeException failure) { store.rows.clear(); store.rows.putAll(original); throw failure; }
                 for (Object id : current) moved.add((String) id);
             }
             return done(moved);

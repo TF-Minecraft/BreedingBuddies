@@ -53,6 +53,21 @@ class RollbackTest(unittest.TestCase):
         (self.root / 'CharacterData/character.json').write_text(json.dumps({'animals': []}))
         self.assertEqual(['animal'], module.rollback(self.root)['changed_animals'])
 
+    def test_utf8_crlf_sources_compare_and_restore_as_exact_bytes_without_resetting_evidence(self):
+        text = '{\r\n  "animals": [], "name": "Éléphant 水", "future": null\r\n}\r\n'
+        source = self.root / 'PlayerData/account.json'
+        source.write_bytes(text.encode('utf-8'))
+        (self.root / 'ownership/source.json').write_text(json.dumps({'PlayerData/account.json': text}, ensure_ascii=False), encoding='utf-8')
+        (self.root / 'ownership/journals/estate.json').write_text('{"done": true, "estate": {"kept": null}}', encoding='utf-8')
+        (self.root / 'ownership/token-effects').mkdir()
+        (self.root / 'ownership/token-effects/completed.json').write_text('{"status": "done", "ownerJournal": "estate"}', encoding='utf-8')
+        before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob('*') if p.is_file()}
+        self.assertEqual([], module.rollback(self.root)['conflicts'])
+        result = module.rollback(self.root, True, Path(self.temporary.name) / 'utf8-recovery')
+        self.assertTrue(result['applied'])
+        self.assertEqual(before, {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob('*') if p.is_file()})
+        self.assertEqual(before, {p.relative_to(Path(result['backup']) / 'data'): p.read_bytes() for p in (Path(result['backup']) / 'data').rglob('*') if p.is_file()})
+
     def test_nested_duplicate_keys_refuse_preview_and_apply_without_writing(self):
         path = self.root / 'CharacterData/character.json'
         path.write_text('{"animals": [{"uuid": "animal", "future": {"kept": null, "kept": 1}}]}')

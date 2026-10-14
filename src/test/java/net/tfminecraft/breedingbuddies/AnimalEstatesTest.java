@@ -104,6 +104,7 @@ class AnimalEstatesTest extends PluginTestBase {
         assertEquals(Outcome.Kind.DONE,new AnimalEstates().settle(decision).kind());assertEquals(true,store.rows.get(unrelated).get("fed"));assertEquals(1750L,store.rows.get(unrelated).get("friendshipPoints"));
         assertEquals(2,store.rows.size());assertEquals(Set.of(to,coowner),AnimalOwnershipStore.owners(store.rows.get(id)));
         UUID late=UUID.randomUUID();JSONObject row=AnimalOwnershipStoreTest.row(late);JSONArray source=new JSONArray();source.add(AnimalOwnershipStore.ref(from));row.put("characterOwners",source);row.put("heldOwners",new JSONArray());store.rows.put(late,row);store.commit(store.fanout(),new JSONObject());store.load();PluginData.rebuildAnimals();
+        OwnershipManager.getAnimal(late).setFed(true);
         var next=decision(2,Recipient.character(to));activate(next);boolean[] flushed={false};
         try(var writes=mockStatic(AnimalFiles.class,CALLS_REAL_METHODS)) {
             writes.when(()->AnimalFiles.write(any(Path.class),anyString())).thenAnswer(call->{call.callRealMethod();String text=call.getArgument(1);if(text.contains("\"kind\":\"gameplay\"")&&text.contains("\"done\":true")){activate(decision(3,Recipient.FROZEN));flushed[0]=true;}return null;});
@@ -135,6 +136,21 @@ class AnimalEstatesTest extends PluginTestBase {
         for(var next:List.of(first,decision(2,Recipient.character(to)),decision(3,Recipient.FROZEN))) {
             activate(next);assertEquals(Outcome.Kind.BLOCKED,new AnimalEstates().settle(next).kind());assertEquals(bytes,store.expected);assertTrue(AnimalOwnershipStore.owners(store.rows.get(id)).contains(from));
         }
+    }
+    @Test void runtimeFailureBeforeEstatePublicationRestoresOriginalRowsAndDoesNotClaimMovement() throws Exception {
+        UUID id=UUID.randomUUID();var store=setup(id);var d=decision(1,Recipient.character(to));activate(d);
+        PluginData.saveAnimals();
+        var before=new LinkedHashMap<>(store.rows);var documents=new LinkedHashMap<>(store.expected);
+        try(var copies=mockStatic(AnimalFiles.class,CALLS_REAL_METHODS)) {
+            copies.when(()->AnimalFiles.copy(any(JSONObject.class))).thenAnswer(call->{
+                JSONObject value=call.getArgument(0);if("estate".equals(value.get("kind")))throw new IllegalStateException("estate metadata copy failed");
+                return call.callRealMethod();
+            });
+            assertEquals(Outcome.Kind.BLOCKED,new AnimalEstates().settle(d).kind());
+        }
+        assertEquals(before,store.rows);assertEquals(documents,store.expected);assertFalse(store.ready);
+        assertTrue(AnimalOwnershipStore.owners(store.rows.get(id)).contains(from));
+        for(var path:store.files("ownership/journals"))assertFalse(AnimalFiles.object(Files.readString(path)).containsKey("estate"));
     }
     @Test void heldRowsAndRecipientConflictsNeverPartiallyModifyOtherSlots() throws Exception {
         UUID first=UUID.randomUUID(),second=UUID.randomUUID();var store=setup(first,second);var d=decision(1,Recipient.character(to));activate(d);var estate=new AnimalEstates();

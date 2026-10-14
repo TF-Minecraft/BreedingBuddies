@@ -127,6 +127,30 @@ class AnimalOwnershipStoreTest {
         var reboot=new AnimalOwnershipStore(root);assertThrows(IOException.class,()->reboot.open(true,k->Optional.of(a)));assertEquals("{\"manual\":null}",Files.readString(next));
     }
 
+    @Test void unchangedSavesDoNotGrowJournalsButRealChangesAndTokenPublicationRetainEvidence() throws Exception {
+        legacy(account,row(id,account));var store=open();FarmAnimal animal=AnimalCodec.load(store.rows.get(id));
+        store.save(List.of(animal));var receipts=store.files("ownership/journals");String last=store.lastJournalId;
+        for(int i=0;i<100;i++)store.save(List.of(animal));
+        assertEquals(receipts,store.files("ownership/journals"));assertEquals(last,store.lastJournalId);
+        animal.setFed(true);store.save(List.of(animal));assertEquals(receipts.size()+1,store.files("ownership/journals").size());
+        store.tokenEffectId=UUID.randomUUID().toString();store.save(List.of(animal));
+        var receipt=AnimalFiles.object(Files.readString(root.resolve("ownership/journals/"+store.lastJournalId+".json")));
+        assertEquals(store.tokenEffectId,receipt.get("tokenEffect"));assertEquals(true,receipt.get("done"));
+        assertEquals(receipts.size()+2,store.files("ownership/journals").size());
+    }
+    @Test void unchangedSaveStillRejectsSourceInventoryCurrentBytesAndUnsupportedHolds() throws Exception {
+        legacy(account,row(id,account));var store=open();FarmAnimal animal=AnimalCodec.load(store.rows.get(id));store.save(List.of(animal));
+        var receipts=store.files("ownership/journals");Path source=root.resolve("PlayerData/"+account+".json");String legacy=Files.readString(source);
+        Path extra=root.resolve("CharacterData/"+UUID.randomUUID()+".json");Files.writeString(extra,"{}");
+        assertThrows(IOException.class,()->store.save(List.of(animal)));Files.delete(extra);
+        Files.writeString(source,legacy+" ");assertThrows(IOException.class,()->store.save(List.of(animal)));Files.writeString(source,legacy);
+        Path current=root.resolve("CharacterData/"+a.characterId()+".json");String original=Files.readString(current);
+        Files.writeString(current,original+" ");assertThrows(IOException.class,()->store.save(List.of(animal)));Files.writeString(current,original);
+        Path pending=root.resolve("ownership/journals/pending.json");Files.writeString(pending,"{\"done\":false}");
+        assertThrows(IOException.class,()->store.save(List.of(animal)));Files.delete(pending);
+        store.held.put(UUID.randomUUID(),"unproved hold");assertThrows(IOException.class,()->store.save(List.of(animal)));
+        assertEquals(receipts,store.files("ownership/journals"));
+    }
     @Test void invalidFilesSchemasAndArchiveChangesNeverBecomeAnEmptyOwnerSet() throws Exception {
         legacy(account,row(id,account)); var store=open();
         assertThrows(IOException.class,()->store.path("../outside.json")); assertThrows(IOException.class,()->store.path("/outside.json"));

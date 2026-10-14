@@ -128,8 +128,9 @@ public class TamingListener implements Listener {
 	}
 
 	private void handleFarmAnimalInteraction(Player player, Entity entity, ItemStack itemInHand) {
-		if (AnimalIdentity.session(player).isEmpty() || PluginData.isHeld(entity.getUniqueId())) { player.sendMessage("Animal ownership is unavailable until a character and reviewed record are ready."); return; }
 		String itemInHandId = ItemUtils.getItemId(itemInHand);
+		if (!itemInHandId.equalsIgnoreCase(CustomItems.tamingItem) && !itemInHandId.equalsIgnoreCase(CustomItems.coownershipItem)) return;
+		if (AnimalIdentity.session(player).isEmpty() || PluginData.isHeld(entity.getUniqueId())) { player.sendMessage("Animal ownership is unavailable until a character and reviewed record are ready."); return; }
 
 		if (itemInHandId.equalsIgnoreCase(CustomItems.tamingItem)) {
 			processTamingItem(player, entity, itemInHand);

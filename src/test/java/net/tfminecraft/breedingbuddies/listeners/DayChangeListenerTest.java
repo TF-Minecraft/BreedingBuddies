@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -152,6 +153,8 @@ class DayChangeListenerTest extends PluginTestBase {
 
     @Test
     void animalsLeftOutTooLongEscapeTheirOwners() throws Exception {
+        sessions.put(alice.getUniqueId(), new net.tfminecraft.tlibs.character.CharacterSession(
+            new net.tfminecraft.tlibs.character.CharacterRef(alice.getUniqueId(), UUID.randomUUID()), 2L));
         FarmAnimal stray = ownedCow(false);
         stray.setDaysOut(Numbers.maxIrlDaysOut);
 
@@ -161,6 +164,9 @@ class DayChangeListenerTest extends PluginTestBase {
         assertFalse(OwnershipManager.hasOwner(stray.getUuid()));
         assertTrue(OwnershipManager.getAnimals(alice.getUniqueId()).isEmpty());
         assertSame(stray, UnownedAnimalsManager.getAnimal(stray.getUuid()));
+        PluginData.loadAnimals();
+        assertEquals(AnimalStates.ESCAPED, UnownedAnimalsManager.getAnimal(stray.getUuid()).getState());
+        assertFalse(OwnershipManager.hasOwner(stray.getUuid()));
     }
 
     @Test

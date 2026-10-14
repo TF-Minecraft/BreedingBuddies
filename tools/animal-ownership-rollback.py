@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preview a stopped-server rollback; apply only unchanged, fully published migrations."""
+"""Prepare legacy account files for an old-JAR rollback on a stopped server; retain character state."""
 import argparse
 import hashlib
 import json
@@ -23,8 +23,8 @@ def parse_document(text):
 
 def preview(root):
     root = Path(root).resolve()
-    archive = parse_document((root / 'ownership/source.json').read_text())
-    plan = parse_document((root / 'ownership/migration.json').read_text())
+    archive = parse_document((root / 'ownership/source.json').read_text(encoding='utf-8'))
+    plan = parse_document((root / 'ownership/migration.json').read_text(encoding='utf-8'))
     conflicts = []
     legacy = {str(p.relative_to(root)) for p in (root / 'PlayerData').glob('*.json')}
     if (root / 'unownedanimals.json').exists():
@@ -35,13 +35,13 @@ def preview(root):
         path = root / name
         if path.is_absolute() and not path.resolve().is_relative_to(root):
             raise ValueError('unsafe archive path')
-        if not path.exists() or path.read_text() != text:
+        if not path.exists() or path.read_bytes() != text.encode('utf-8'):
             conflicts.append('legacy source changed: ' + name)
     for path in (root / 'ownership/journals').glob('*.json'):
-        if not parse_document(path.read_text()).get('done'):
+        if not parse_document(path.read_text(encoding='utf-8')).get('done'):
             conflicts.append('incomplete journal: ' + path.name)
     for path in (root / 'ownership/token-effects').glob('*.json'):
-        if parse_document(path.read_text()).get('status') != 'done':
+        if parse_document(path.read_text(encoding='utf-8')).get('status') != 'done':
             conflicts.append('unfinished token effect: ' + path.name)
     copies = {}
     differing = set()
@@ -50,7 +50,7 @@ def preview(root):
     if unowned.exists():
         character_files.append(unowned)
     for path in character_files:
-        document = parse_document(path.read_text())
+        document = parse_document(path.read_text(encoding='utf-8'))
         for row in document['animals']:
             previous = copies.setdefault(row['uuid'], row)
             if previous != row:
@@ -82,7 +82,7 @@ def rollback(root, apply=False, backup=None):
     copied = {str(p.relative_to(target / 'data')): hashlib.sha256(p.read_bytes()).hexdigest() for p in (target / 'data').rglob('*') if p.is_file()}
     if copied != originals:
         raise ValueError('Recovery image verification failed')
-    (target / 'SHA256.json').write_text(json.dumps(originals, indent=2))
+    (target / 'SHA256.json').write_text(json.dumps(originals, indent=2), encoding='utf-8')
     # Force every copied file and directory before touching legacy authority.
     for path in sorted(target.rglob('*'), key=lambda p: len(p.parts), reverse=True):
         descriptor = os.open(path, os.O_RDONLY)
@@ -90,12 +90,12 @@ def rollback(root, apply=False, backup=None):
             os.fsync(descriptor)
         finally:
             os.close(descriptor)
-    archive = parse_document((root / 'ownership/source.json').read_text())
+    archive = parse_document((root / 'ownership/source.json').read_text(encoding='utf-8'))
     for name, text in archive.items():
         path = root / name
         temporary = path.with_name(path.name + '.rollback-next')
-        with temporary.open('x') as handle:
-            handle.write(text)
+        with temporary.open('xb') as handle:
+            handle.write(text.encode('utf-8'))
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, path)
