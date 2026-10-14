@@ -46,6 +46,6 @@ public final class AnimalIdentity implements Listener {
     }
     @EventHandler public void started(CharacterSessionStartEvent event) {
         Player player = event.getPlayer();
-        if (player.getVehicle() != null && OwnershipManager.hasOwner(player.getVehicle().getUniqueId()) && !OwnershipManager.isOwner(player.getUniqueId(), player.getVehicle().getUniqueId())) player.leaveVehicle();
+        if (player.getVehicle() != null && (AnimalUtils.isFarmAnimal(player.getVehicle()) || PluginData.knowsAnimal(player.getVehicle().getUniqueId())) && OwnershipManager.hasOwner(player.getVehicle().getUniqueId()) && !OwnershipManager.isOwner(player.getUniqueId(), player.getVehicle().getUniqueId())) player.leaveVehicle();
     }
 }

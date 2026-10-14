@@ -29,7 +29,7 @@ public class OwnershipManager {
     public static void removeAnimal(UUID animal) {
         if (PluginData.isHeld(animal)) return;
         PluginData.getPlayerAnimals().values().forEach(animals -> animals.removeIf(value -> { if (!value.getUuid().equals(animal)) return false; value.getOwnersUuids().clear(); value.getOwnerRefs().clear(); return true; }));
-        try { PluginData.ownership().forget(animal); PluginData.saveAnimals(); }
+        try { if (!PluginData.getUnownedAnimals().containsKey(animal)) PluginData.ownership().forget(animal); PluginData.saveAnimals(); }
         catch (java.io.IOException failure) { throw new IllegalStateException(failure); }
     }
     public static Set<FarmAnimal> getAnimals(UUID account) {

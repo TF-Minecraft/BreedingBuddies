@@ -7,6 +7,8 @@ import net.tfminecraft.breedingbuddies.FarmAnimal;
 import net.tfminecraft.breedingbuddies.ItemUtils;
 import net.tfminecraft.breedingbuddies.OwnershipManager;
 import net.tfminecraft.breedingbuddies.ParticleManager;
+import net.tfminecraft.breedingbuddies.AnimalUtils;
+import net.tfminecraft.breedingbuddies.PluginData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,7 +37,8 @@ public class AnimalCareListener implements Listener {
 					care(animal, entity, player, itemInHand);
 					event.setCancelled(true);
 				}
-			} else if (OwnershipManager.hasOwner(entity.getUniqueId())
+			} else if ((AnimalUtils.isFarmAnimal(entity) || PluginData.knowsAnimal(entity.getUniqueId()))
+					&& OwnershipManager.hasOwner(entity.getUniqueId())
 					&& !OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId())) {
 				if (!player.hasPermission("breedingbuddies.use")) {
 					player.sendMessage(Messages.notOwner);
