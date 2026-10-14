@@ -160,4 +160,20 @@ class AnimalEstatesTest extends PluginTestBase {
         assertEquals(Outcome.Kind.BLOCKED,estate.settle(d).kind());assertTrue(AnimalOwnershipStore.owners(store.rows.get(first)).contains(from));
         setStatic(PluginData.class,"ownership",null);assertEquals(Holdings.NONE,estate.describe(from.characterId()));assertEquals(Outcome.Kind.RETRY,estate.settle(d).kind());
     }
+    @Test void careFlushIsPrunedEstateReceiptIsKeptAndInertDoneGameplayIsIgnored() throws Exception {
+        UUID id=UUID.randomUUID();var store=setup(id);OwnershipManager.getAnimal(id).setFed(true);var d=decision(1,Recipient.character(to));activate(d);
+        Path[] care={null};String[] done={null};Outcome.Done outcome;
+        try(var writes=mockStatic(AnimalFiles.class,CALLS_REAL_METHODS)) {
+            writes.when(()->AnimalFiles.write(any(Path.class),anyString())).thenAnswer(call->{
+                String text=call.getArgument(1);if(text.contains("\"kind\":\"gameplay\"")&&text.contains("\"done\":true")){care[0]=call.getArgument(0);done[0]=text;}
+                return call.callRealMethod();
+            });
+            outcome=(Outcome.Done)new AnimalEstates().settle(d);
+        }
+        assertNotNull(care[0]);assertFalse(Files.exists(care[0]));assertEquals(true,store.rows.get(id).get("fed"));
+        Path receipt=store.files("ownership/journals").getLast();String kept=Files.readString(receipt);assertEquals("estate",AnimalFiles.object(kept).get("kind"));
+        Files.writeString(care[0],done[0]);var reboot=new AnimalOwnershipStore(directory);reboot.guard=AnimalEstates::guard;reboot.open(false,k->Optional.empty());
+        setStatic(PluginData.class,"ownership",reboot);PluginData.rebuildAnimals();assertTrue(reboot.ready);
+        assertEquals(outcome,new AnimalEstates().settle(d));assertEquals(kept,Files.readString(receipt));assertEquals(done[0],Files.readString(care[0]));
+    }
 }

@@ -28,7 +28,7 @@ public class MountListener implements Listener {
         }
 
         Player player = (Player) rider;
-        if (AnimalUtils.isFarmAnimal(entity)) {
+        if (AnimalUtils.isFarmAnimal(entity) || PluginData.knowsAnimal(entity.getUniqueId())) {
             //se cancela el evento si el caballo tiene dueño y no es el que interacciona
             if (AnimalIdentity.session(player).isEmpty() || (OwnershipManager.hasOwner(entity.getUniqueId()) && !OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId()))) {
                 SoundManager.playAngryCowSound(entity);
@@ -42,7 +42,7 @@ public class MountListener implements Listener {
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        if (AnimalUtils.isFarmAnimal(entity) && OwnershipManager.hasOwner(entity.getUniqueId()) && !OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId()) && !(player.hasPermission("breedingbuddies.use") && AnimalIdentity.session(player).isPresent() && !PluginData.isHeld(entity.getUniqueId()))) { event.setCancelled(true); return; }
+        if ((AnimalUtils.isFarmAnimal(entity) || PluginData.knowsAnimal(entity.getUniqueId())) && OwnershipManager.hasOwner(entity.getUniqueId()) && !OwnershipManager.isOwner(player.getUniqueId(), entity.getUniqueId()) && !(player.hasPermission("breedingbuddies.use") && AnimalIdentity.session(player).isPresent() && !PluginData.isHeld(entity.getUniqueId()))) { event.setCancelled(true); return; }
 
         if(event.getHand().equals(EquipmentSlot.HAND)) {
             if (MountUtils.isFullStatMount(entity) && ItemUtils.getItemId(itemInHand).equalsIgnoreCase(CustomItems.neuterItem)) {

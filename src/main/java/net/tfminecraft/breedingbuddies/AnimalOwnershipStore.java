@@ -18,7 +18,7 @@ final class AnimalOwnershipStore {
     final Map<String, String> expected = new LinkedHashMap<>();
     Predicate<JSONObject> guard = ignored -> false;
     boolean ready;
-    String tokenEffectId, lastJournalId;
+    String tokenEffectId, lastJournalId, lastJournalToken;
     private String blocked;
     AnimalOwnershipStore(Path root) { this.root = root; }
     Path path(String relative) throws IOException {
@@ -90,6 +90,14 @@ final class AnimalOwnershipStore {
         if (journal.containsKey("estate") && !guard.test(journal)) { blocked = "Estate guard changed before receipt"; throw new IOException(blocked); }
         journal.put("done", true);
         AnimalFiles.write(journalPath, journal.toJSONString());
+        if ("gameplay".equals(journal.get("kind")) && !journal.containsKey("tokenEffect")) {
+            try { prune(journalPath); }
+            catch (IOException ignored) { /* Durable completion is already acknowledged; an inert receipt may remain. */ }
+        }
+    }
+    void prune(Path journalPath) throws IOException {
+        Files.deleteIfExists(journalPath);
+        try (var directory = java.nio.channels.FileChannel.open(journalPath.getParent(), StandardOpenOption.READ)) { directory.force(true); }
     }
     void commit(Map<String, JSONObject> outputs, JSONObject metadata) throws IOException {
         if (blocked != null) throw new IOException(blocked);
@@ -127,19 +135,20 @@ final class AnimalOwnershipStore {
         if ("gameplay".equals(journal.get("kind")) && tokenEffectId == null && !unfinishedToken
             && writes.stream().allMatch(value -> Objects.equals(((JSONObject) value).get("before"), ((JSONObject) value).get("after")))) {
             verifySources();
+            if (!outputs.keySet().equals(expected.keySet())) throw new IOException("Unchanged animal output inventory differs from loaded files");
             Set<String> inventory = new HashSet<>();
             for (Path current : files("CharacterData")) inventory.add(relative(current));
             if (Files.exists(path("character-unowned.json"))) inventory.add("character-unowned.json");
             if (!inventory.equals(expected.keySet())) throw new IOException("Post-load animal file inventory changed");
-            for (Path pending : files("ownership/journals"))
-                if (!Boolean.TRUE.equals(AnimalFiles.object(Files.readString(pending)).get("done"))) throw new IOException("Unfinished animal journal " + pending.getFileName());
             validateReceipt(receipt, journal);
+            documents.clear(); documents.putAll(outputs);
             return;
         }
         AnimalFiles.write(receipt, journal.toJSONString());
         ready = false;
         publish(receipt, journal);
         lastJournalId = id;
+        lastJournalToken = tokenEffectId;
         outputs.forEach((name, document) -> expected.put(name, document.toJSONString()));
         ready = true;
     }

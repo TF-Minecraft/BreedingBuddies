@@ -55,4 +55,21 @@ class AnimalTokenIntentTest extends PluginTestBase {
             assertThrows(IllegalStateException.class,()->AnimalTokenIntent.prepare(player,player,animal,item));
         }
     }
+    @Test void tokenFinishRefusesAnUnrelatedPublicationOrAnUnavailableStoreBeforeDebit() throws Exception {
+        var player=player();Cow cow=spawn(Cow.class);var animal=own(player,cow);var store=PluginData.ownership();
+        var item=token("Chosen");var intent=AnimalTokenIntent.prepare(player,player,animal,item);
+        store.tokenEffectId=null;animal.setFed(true);PluginData.saveAnimals();
+        String unrelated=store.lastJournalId;
+        assertThrows(IllegalStateException.class,()->intent.finish(player,player,animal,item,()->fail("effect must not run")));
+        assertEquals(1,item.getAmount());assertNull(cow.getCustomName());assertTrue(store.held.containsKey(animal.getUuid()));
+        JSONObject effect=AnimalFiles.object(Files.readString(store.files("ownership/token-effects").getFirst()));
+        assertEquals("prepared",effect.get("status"));assertFalse(effect.containsKey("ownerJournal"));
+        assertNotEquals(effect.get("id"),unrelated);
+        store.held.clear();var second=AnimalTokenIntent.prepare(player,player,animal,item);PluginData.saveAnimals();
+        Path journal=store.path("ownership/journals/"+store.lastJournalId+".json");assertTrue(Files.exists(journal));
+        store.ready=false;PluginData.saveAnimals();
+        assertThrows(IllegalStateException.class,()->second.finish(player,player,animal,item,()->fail("effect must not run")));
+        assertEquals(1,item.getAmount());assertTrue(store.held.containsKey(animal.getUuid()));
+        for(Path receipt:store.files("ownership/token-effects")) {var raw=AnimalFiles.object(Files.readString(receipt));assertEquals("prepared",raw.get("status"));assertFalse(raw.containsKey("ownerJournal"));}
+    }
 }

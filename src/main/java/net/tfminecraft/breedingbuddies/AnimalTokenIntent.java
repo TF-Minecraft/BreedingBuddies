@@ -29,6 +29,7 @@ public final class AnimalTokenIntent {
     }
     public void finish(Player player, Player target, FarmAnimal animal, ItemStack token, Runnable entityEffect) {
         if (!AnimalIdentity.current(actor,player)||!AnimalIdentity.current(recipient,target)||!before.equals(token)) { hold(animal);throw new IllegalStateException("Token session or payload changed"); }
+        if (!PluginData.ownership().ready || !Objects.equals(evidence.get("id"),PluginData.ownership().lastJournalToken)) { hold(animal);throw new IllegalStateException("Token ownership publication is unavailable or unbound"); }
         evidence.put("ownerJournal",PluginData.ownership().lastJournalId);
         evidence.put("animalAfter",AnimalFiles.copy(PluginData.ownership().rows.get(animal.getUuid())));evidence.put("status","debit-prepared");write();
         entityEffect.run();token.setAmount(token.getAmount()-1);

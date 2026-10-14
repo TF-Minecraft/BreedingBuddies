@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import subprocess
+import sys
 
 spec = importlib.util.spec_from_file_location('rollback', Path(__file__).with_name('animal-ownership-rollback.py'))
 module = importlib.util.module_from_spec(spec)
@@ -67,6 +69,32 @@ class RollbackTest(unittest.TestCase):
         self.assertTrue(result['applied'])
         self.assertEqual(before, {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob('*') if p.is_file()})
         self.assertEqual(before, {p.relative_to(Path(result['backup']) / 'data'): p.read_bytes() for p in (Path(result['backup']) / 'data').rglob('*') if p.is_file()})
+
+    def test_json_simple_escapes_raw_utf8_and_cli_name_the_actual_rollback_contract(self):
+        text = '{\r\n "animals": [], "path": "stable/farm", "name": "Éléphant 水 €", "future": null\r\n}\r\n'
+        (self.root / 'PlayerData/account.json').write_bytes(text.encode('utf-8'))
+        archive = json.dumps({'PlayerData/account.json': text}, ensure_ascii=False).replace('/', '\\/').replace('€', '\\u20ac')
+        (self.root / 'ownership/source.json').write_bytes(archive.encode('utf-8'))
+        self.assertIn(b'\\r\\n', archive.encode('utf-8'))
+        self.assertIn(b'\\/', archive.encode('utf-8'))
+        self.assertIn(b'\\u20ac', archive.encode('utf-8'))
+        self.assertIn('水'.encode('utf-8'), archive.encode('utf-8'))
+        before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob('*') if p.is_file()}
+        self.assertEqual([], module.rollback(self.root)['conflicts'])
+        result = json.loads(subprocess.check_output([sys.executable, str(Path(module.__file__)), str(self.root), '--apply', '--backup', str(Path(self.temporary.name) / 'escaped-recovery')], text=True))
+        self.assertTrue(result['applied'])
+        self.assertIn('d6fa922', result['target'])
+        self.assertIn('no published JAR', result['target'])
+        self.assertIn('does not migrate again', result['character_restart'])
+        self.assertIn('refuses to open until staff review', result['after_legacy_writes'])
+        self.assertEqual(['character data', 'journals', 'receipts'], result['preserved'])
+        self.assertEqual(before, {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob('*') if p.is_file()})
+        self.assertEqual(before, {p.relative_to(Path(result['backup']) / 'data'): p.read_bytes() for p in (Path(result['backup']) / 'data').rglob('*') if p.is_file()})
+        help_text = ' '.join(subprocess.check_output([sys.executable, str(Path(module.__file__)), '--help'], text=True).split())
+        self.assertIn('pre-character', help_text)
+        self.assertIn('d6fa922', help_text)
+        self.assertIn('does not migrate again', help_text)
+        self.assertIn('staff review', help_text)
 
     def test_nested_duplicate_keys_refuse_preview_and_apply_without_writing(self):
         path = self.root / 'CharacterData/character.json'

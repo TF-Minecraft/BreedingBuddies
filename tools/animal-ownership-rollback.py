@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Prepare legacy account files for an old-JAR rollback on a stopped server; retain character state."""
+"""Prepare legacy files for the pre-character d6fa922 source lineage (no published JAR),
+on a stopped server. Apply preserves character data, journals and receipts. A
+character-ownership build resumes the existing store and does not migrate again.
+After pre-character writes, that store refuses to open until staff review.
+"""
 import argparse
 import hashlib
 import json
@@ -61,7 +65,11 @@ def preview(root):
     changed = sorted(differing | (set(canonical) ^ set(copies)))
     conflicts.extend('post-migration animal changes: ' + key for key in changed)
     return {'archived_files': len(archive), 'canonical_animals': len(canonical), 'current_animals': len(copies),
-            'held_animals': len(plan['held']), 'changed_animals': changed, 'conflicts': sorted(set(conflicts)), 'applied': False}
+            'held_animals': len(plan['held']), 'changed_animals': changed, 'conflicts': sorted(set(conflicts)), 'applied': False,
+            'target': 'pre-character d6fa922 source lineage; no published JAR',
+            'preserved': ['character data', 'journals', 'receipts'],
+            'character_restart': 'resumes the existing character store and does not migrate again',
+            'after_legacy_writes': 'character store refuses to open until staff review'}
 
 
 def rollback(root, apply=False, backup=None):

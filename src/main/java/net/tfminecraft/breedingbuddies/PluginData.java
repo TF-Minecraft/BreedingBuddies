@@ -126,6 +126,7 @@ public class PluginData {
     static AnimalOwnershipStore ownership() { return ownership; }
     public static boolean ownershipReady() { return ownership != null && ownership.ready; }
     public static boolean isHeld(UUID id) { return ownership == null || ownership.held(id); }
+    public static boolean knowsAnimal(UUID id) { return ownership != null && (ownership.rows.containsKey(id) || ownership.held.containsKey(id)); }
     public static void saveUnownedAnimals() { saveAnimals(); }
     public static void loadUnownedAnimals() { loadAnimals(); }
     static void saveAllPlayerData() { saveAnimals(); }
