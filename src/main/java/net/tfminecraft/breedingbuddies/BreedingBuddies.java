@@ -45,8 +45,9 @@ public class BreedingBuddies extends JavaPlugin implements TabCompleter {
     @Override
     public void onEnable() {
         instance = this;
-        PluginData.loadAllData();
         createAndLoadConfigs();
+        PluginData.loadAllData();
+        AnimalIdentity.start(this);
         registerListeners();
         this.dayScheduler = new DayChangeScheduler(this, Numbers.startingDayHour, Numbers.startingDayMin);
         this.dayScheduler.startScheduler();

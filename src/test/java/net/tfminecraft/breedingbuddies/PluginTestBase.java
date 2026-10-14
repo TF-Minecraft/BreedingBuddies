@@ -63,6 +63,8 @@ public abstract class PluginTestBase {
     protected BreedingBuddies plugin;
     protected WorldMock world;
     private MockedStatic<NBTItem> nbtItems;
+    protected net.tfminecraft.tlibs.character.CharacterIdentity characters;
+    protected final Map<UUID, net.tfminecraft.tlibs.character.CharacterSession> sessions = new HashMap<>();
 
     @BeforeEach
     void startServer() throws IOException {
@@ -75,6 +77,16 @@ public abstract class PluginTestBase {
         server = MockBukkit.mock();
         MockBukkit.createMockPlugin("MMOItems");
         MockBukkit.createMockPlugin("MythicLib");
+        var tlibs = MockBukkit.createMockPlugin("TLibs");
+        characters = mock(net.tfminecraft.tlibs.character.CharacterIdentity.class);
+        when(characters.legacyHeirsReady()).thenReturn(true);
+        when(characters.currentSession(any(org.bukkit.entity.Player.class))).thenAnswer(call -> {
+            UUID account = ((org.bukkit.entity.Player) call.getArgument(0)).getUniqueId();
+            return java.util.Optional.ofNullable(sessions.computeIfAbsent(account, key -> new net.tfminecraft.tlibs.character.CharacterSession(new net.tfminecraft.tlibs.character.CharacterRef(key, key), 1L)));
+        });
+        when(characters.isCurrent(any())).thenAnswer(call -> { var session = (net.tfminecraft.tlibs.character.CharacterSession) call.getArgument(0); return session != null && session.equals(sessions.get(session.ref().ownerId())); });
+        when(characters.legacyHeir(any())).thenAnswer(call -> { UUID account = call.getArgument(0); return java.util.Optional.of(new net.tfminecraft.tlibs.character.CharacterRef(account, account)); });
+        server.getServicesManager().register(net.tfminecraft.tlibs.character.CharacterIdentity.class, characters, tlibs, org.bukkit.plugin.ServicePriority.Normal);
         world = server.addSimpleWorld("world");
         plugin = MockBukkit.load(BreedingBuddies.class);
     }
@@ -208,7 +220,7 @@ public abstract class PluginTestBase {
     }
 
     protected static Path playerFile(UUID player) {
-        return DATA_DIR.resolve("PlayerData").resolve(player + ".json");
+        return DATA_DIR.resolve("CharacterData").resolve(player + ".json");
     }
 
     /** Collects log records written to a logger while a test runs. */

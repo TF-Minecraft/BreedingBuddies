@@ -9,11 +9,11 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OwnershipManagerTest extends PluginTestBase {
-    private final UUID alice = UUID.randomUUID();
-    private final UUID bob = UUID.randomUUID();
+    private UUID alice, bob;
+    @org.junit.jupiter.api.BeforeEach void actors() { alice = player().getUniqueId(); bob = player().getUniqueId(); }
 
     private static FarmAnimal animal() {
-        return new FarmAnimal(UUID.randomUUID(), "Daisy", new HashSet<>());
+        FarmAnimal a = new FarmAnimal(UUID.randomUUID(), "Daisy", new HashSet<>()); a.setState(AnimalStates.HAPPY); return a;
     }
 
     @Test
@@ -51,7 +51,7 @@ class OwnershipManagerTest extends PluginTestBase {
     void anAnimalListedWithNoOwnersHasNoOwner() {
         FarmAnimal daisy = animal();
         OwnershipManager.registerOwnership(alice, daisy);
-        daisy.getOwnersUuids().clear();
+        OwnershipManager.removeOwnership(alice, daisy);
 
         assertFalse(OwnershipManager.hasOwner(daisy.getUuid()));
         assertFalse(OwnershipManager.hasOwner(UUID.randomUUID()));

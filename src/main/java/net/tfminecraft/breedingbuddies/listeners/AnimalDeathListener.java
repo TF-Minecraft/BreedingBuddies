@@ -13,8 +13,8 @@ public class AnimalDeathListener implements Listener {
 	public void onAnimalDeath(EntityDeathEvent event) {
 		if (event.getEntity() instanceof Animals) {
             Entity animal = event.getEntity();
-            OwnershipManager.removeAnimal(animal.getUniqueId());
             UnownedAnimalsManager.removeUnownedAnimal(animal.getUniqueId());
+            OwnershipManager.removeAnimal(animal.getUniqueId());
         }
 	}
 }

@@ -198,7 +198,9 @@ class FarmToolsListenerTest extends PluginTestBase {
         Cow cow = spawn(Cow.class);
         FarmAnimal daisy = own(alice, cow);
         // A record sharing the zombie's ID shows the zombie's death is not looked up.
-        OwnershipManager.registerOwnership(alice.getUniqueId(), new FarmAnimal(zombie.getUniqueId(), "Odd", new java.util.HashSet<>()));
+        FarmAnimal odd = new FarmAnimal(zombie.getUniqueId(), "Odd", new java.util.HashSet<>());
+        odd.setState(net.tfminecraft.breedingbuddies.AnimalStates.HAPPY);
+        OwnershipManager.registerOwnership(alice.getUniqueId(), odd);
 
         new AnimalDeathListener().onAnimalDeath(death(zombie));
 

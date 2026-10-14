@@ -22,6 +22,10 @@ public class BreedingListener implements Listener {
 			Player player = (Player) event.getBreeder();
 			Entity motherEntity = event.getMother();
 			Entity fatherEntity = event.getFather();
+            boolean tracked = AnimalUtils.isFarmAnimal(motherEntity) || AnimalUtils.isFarmAnimal(fatherEntity)
+                || PluginData.knowsAnimal(motherEntity.getUniqueId()) || PluginData.knowsAnimal(fatherEntity.getUniqueId());
+            var session = AnimalIdentity.session(player).orElse(null);
+            if (tracked && (session == null || !PluginData.ownershipReady())) { event.setCancelled(true); return; }
 			Entity childEntity = event.getEntity();
 
 			FarmAnimal mother = OwnershipManager.getAnimal(motherEntity.getUniqueId());
@@ -43,6 +47,7 @@ public class BreedingListener implements Listener {
 			if (playerIsOwner) {
 				if (MountUtils.isFullStatMount(childEntity)) {
 					Bukkit.getScheduler().runTaskLater(BreedingBuddies.getInstance(), () -> {
+						if (!AnimalIdentity.current(session, player) || !playerOwnsParents(player, fatherEntity, motherEntity)) return;
 						MountUtils.applyInheritedStats(
 								(LivingEntity) childEntity,
 								(LivingEntity) motherEntity,
@@ -56,7 +61,7 @@ public class BreedingListener implements Listener {
 				} else {
 					specialBreed(mother, father, childEntity);
 				}
-			} else if (parentsHaveOwner(fatherEntity, motherEntity) && !playerIsOwner) {
+			} else if (tracked && parentsHaveOwner(fatherEntity, motherEntity) && !playerIsOwner) {
 				event.setCancelled(true);
 			}
 		}

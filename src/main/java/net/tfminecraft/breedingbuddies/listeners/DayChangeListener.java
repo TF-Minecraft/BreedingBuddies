@@ -35,6 +35,7 @@ public class DayChangeListener implements Listener {
 	}
 
 	public static void globalChangeDay(UUID excludeUuid, int daysChecked) {
+		if (!PluginData.ownershipReady()) return;
 		List<ChunkArea> chunkAreas = PluginData.getChunkAreas();
 		Set<UUID> processed = new HashSet<>();
 
@@ -144,7 +145,7 @@ public class DayChangeListener implements Listener {
 
 	// Chunk loading and entity reads must run on the server thread.
 	private static void scheduleGlobalChangeDay(UUID excludedEntity, int daysChecked) {
-		if (isChangingDay) return;
+		if (isChangingDay || !PluginData.ownershipReady()) return;
 		isChangingDay = true;
 		Bukkit.getScheduler().runTask(BreedingBuddies.getInstance(), () -> runGlobalChangeDay(excludedEntity, daysChecked));
 	}
@@ -185,6 +186,7 @@ public class DayChangeListener implements Listener {
 	}
 
 	public static void changeDayOnInteract(Entity entity, FarmAnimal animal) {
+		if (!PluginData.ownershipReady() || PluginData.isHeld(animal.getUuid())) return;
 		int daysChecked = daysBetween(getLastChangeDate(), LocalDateTime.now(ZoneOffset.UTC));
 		if (daysChecked < 1) return;
 		IndividualChangeDay(entity, animal, daysChecked);
@@ -192,7 +194,7 @@ public class DayChangeListener implements Listener {
 	}
 
 	public static void changeDayOnReport() {
-		if (isChangingDay) return;
+		if (isChangingDay || !PluginData.ownershipReady()) return;
 		isChangingDay = true;
 		try {
 			int daysChecked = daysBetween(getLastChangeDate(), LocalDateTime.now(ZoneOffset.UTC));
