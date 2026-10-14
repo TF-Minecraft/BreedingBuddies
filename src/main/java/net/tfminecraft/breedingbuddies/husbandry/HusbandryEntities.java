@@ -78,7 +78,7 @@ public final class HusbandryEntities {
         if (entity == null) {
             return false;
         }
-        Byte value = entity.getPersistentDataContainer().get(HusbandryKeys.MANAGED, PersistentDataType.BYTE);
+        Byte value = HusbandryKeys.read(entity.getPersistentDataContainer(), HusbandryKeys.MANAGED, PersistentDataType.BYTE);
         return value != null && value == 1;
     }
 

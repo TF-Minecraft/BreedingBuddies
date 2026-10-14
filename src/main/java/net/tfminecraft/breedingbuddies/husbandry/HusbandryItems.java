@@ -65,8 +65,8 @@ public final class HusbandryItems {
         if (stack == null || !stack.hasItemMeta()) {
             return null;
         }
-        String stored = stack.getItemMeta().getPersistentDataContainer()
-                .get(HusbandryKeys.TAME_NAME, PersistentDataType.STRING);
+        String stored = HusbandryKeys.read(stack.getItemMeta().getPersistentDataContainer(),
+                HusbandryKeys.TAME_NAME, PersistentDataType.STRING);
         if (stored == null || stored.isBlank() || "???".equals(stored.trim())) {
             return null;
         }
@@ -89,8 +89,8 @@ public final class HusbandryItems {
         if (stack == null || !stack.hasItemMeta()) {
             return null;
         }
-        return stack.getItemMeta().getPersistentDataContainer()
-                .get(HusbandryKeys.LINKED_ANIMAL, PersistentDataType.STRING);
+        return HusbandryKeys.read(stack.getItemMeta().getPersistentDataContainer(),
+                HusbandryKeys.LINKED_ANIMAL, PersistentDataType.STRING);
     }
 
     // Keep the existing legacy text representation, formatting, and exact-string comparisons.

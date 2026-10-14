@@ -146,7 +146,7 @@ class HusbandryInspectionCoverageTest {
     @Test void stateDisplayMigratesOnlyLegacyLabelsAndShowsEveryAffliction() {
         Cow cow = f.spawn(Cow.class); HusbandryAnimal animal = f.record(cow); animal.setName(null);
         TextDisplay legacy = f.spawn(TextDisplay.class), unrelated = f.spawn(TextDisplay.class); Pig passenger = f.spawn(Pig.class);
-        legacy.getPersistentDataContainer().set(new NamespacedKey(f.plugin, "state_label"), PersistentDataType.STRING, "old"); cow.addPassenger(legacy); cow.addPassenger(unrelated); cow.addPassenger(passenger);
+        legacy.getPersistentDataContainer().set(new NamespacedKey("cooking", "state_label"), PersistentDataType.STRING, "old"); cow.addPassenger(legacy); cow.addPassenger(unrelated); cow.addPassenger(passenger);
         HusbandryStateDisplay.sync(cow, animal); assertFalse(legacy.isValid()); assertTrue(unrelated.isValid()); assertTrue(passenger.isValid()); assertEquals("Cow", cow.getCustomName()); assertFalse(cow.isCustomNameVisible());
         animal.setName("Bess"); animal.setHungrySince(1L); HusbandryStateDisplay.sync(cow, animal); assertEquals("Bess (Hungry)", cow.getCustomName()); assertTrue(cow.isCustomNameVisible());
         animal.setDirtySince(1L); HusbandryStateDisplay.sync(cow, animal); assertEquals("Bess (Hungry, Dirty)", cow.getCustomName()); animal.setHungrySince(null); HusbandryStateDisplay.sync(cow, animal); assertEquals("Bess (Dirty)", cow.getCustomName());

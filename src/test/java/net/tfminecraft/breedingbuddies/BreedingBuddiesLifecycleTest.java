@@ -158,6 +158,18 @@ class BreedingBuddiesLifecycleTest {
         identities.verifyNoInteractions();
     }
 
+    @Test void aFailedTakeoverOfCookingRecordsStopsStartupBeforeAnEmptyDatabaseIsCreated() {
+        MockedStatic<CookingMigration> migration = staticMock(CookingMigration.class);
+        java.io.IOException failure = new java.io.IOException("disk full");
+        migration.when(() -> CookingMigration.run(any(), any())).thenThrow(failure);
+
+        Throwable error = assertThrows(RuntimeException.class, this::loadPlugin);
+
+        while (error.getCause() != null && error.getCause() != failure) error = error.getCause();
+        assertSame(failure, error.getCause());
+        repositories.verifyNoInteractions();
+    }
+
     @Test void databaseCloseFailureStillClearsTheRepository() {
         BreedingBuddies plugin = loadPlugin();
         doThrow(new IllegalStateException("close failed")).when(repository).close();

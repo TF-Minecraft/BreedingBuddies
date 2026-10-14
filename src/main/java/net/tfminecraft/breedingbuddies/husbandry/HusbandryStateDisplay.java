@@ -8,13 +8,12 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 
-import net.tfminecraft.breedingbuddies.BreedingBuddies;
 
 public final class HusbandryStateDisplay {
 
-    /** Legacy TextDisplay passengers from the old affliction UI. */
+    /** TextDisplay passengers from Cooking's old affliction UI. */
     private static final NamespacedKey LEGACY_STATE_LABEL =
-            new NamespacedKey(BreedingBuddies.plugin, "state_label");
+            new NamespacedKey(HusbandryKeys.COOKING, "state_label");
 
     private HusbandryStateDisplay() {}
 

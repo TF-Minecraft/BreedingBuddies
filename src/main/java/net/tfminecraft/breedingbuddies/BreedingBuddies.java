@@ -1,6 +1,7 @@
 package net.tfminecraft.breedingbuddies;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,6 +41,11 @@ public class BreedingBuddies extends JavaPlugin {
         plugin = this;
 
         new File(getDataFolder(), "Data").mkdirs();
+        try {
+            CookingMigration.run(getDataFolder(), getLogger());
+        } catch (IOException ex) {
+            throw new IllegalStateException("Could not take over Cooking's animal records", ex);
+        }
         if (!new File(getDataFolder(), "config.yml").exists()) {
             saveResource("config.yml", false);
         }
