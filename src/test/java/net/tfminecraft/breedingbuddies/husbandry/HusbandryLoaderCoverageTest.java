@@ -103,7 +103,7 @@ public class HusbandryLoaderCoverageTest {
         assertFalse(HusbandryConfig.damageOtherPlayers()); assertFalse(HusbandryConfig.damageOwner()); assertFalse(HusbandryConfig.damageMobs()); assertFalse(HusbandryConfig.damageEnvironment());
         assertEquals(0.3, HusbandryConfig.geneticVarianceMultiplier()); assertEquals(0.7, HusbandryConfig.geneticSlowdownDivisor()); assertEquals(0.04, HusbandryConfig.careInfluence());
         assertEquals("new-revision", HusbandryConfig.statsRevision()); assertFalse(HusbandryConfig.restoreLostAnimals()); assertEquals("ranching", HusbandryConfig.professionId());
-        assertEquals(0.1, HusbandryConfig.mountSpeedMinPct()); assertEquals(0.2, HusbandryConfig.mountSpeedGeneticsPct()); assertEquals(0.3, HusbandryConfig.mountSpeedCarePct());
+        assertEquals(0.1, HusbandryConfig.mountMinPct()); assertEquals(0.2, HusbandryConfig.mountGeneticsPct()); assertEquals(0.3, HusbandryConfig.mountCarePct());
         assertEquals(Set.of(EntityType.COW, EntityType.WOLF), HusbandryConfig.species().keySet());
         HusbandrySpecies cow = HusbandryConfig.species(EntityType.COW);
         assertTrue(cow.canMilk()); assertTrue(cow.canSlaughter()); assertFalse(cow.canShear()); assertTrue(cow.canShed()); assertTrue(cow.hasEgg()); assertTrue(cow.vanillaEggs()); assertEquals("roast-beef", cow.slaughterMeat());
@@ -127,6 +127,14 @@ public class HusbandryLoaderCoverageTest {
         assertEquals(2, HusbandryConfig.roastCutsFor(-1)); assertEquals(4, HusbandryConfig.roastCutsFor(100)); assertEquals(1, HusbandryConfig.woolFor(0)); assertEquals(3, HusbandryConfig.woolFor(100)); assertEquals(0, HusbandryConfig.secondaryExtraFor(0)); assertEquals(3, HusbandryConfig.hideCount(100)); assertEquals(0, HusbandryConfig.secondaryExtraFor(100, null));
         assertTrue(HusbandryConfig.isHusbandryType(EntityType.WOLF)); assertTrue(HusbandryConfig.isHusbandryType(EntityType.PIG)); assertFalse(HusbandryConfig.isHusbandryType(EntityType.ZOMBIE)); assertFalse(HusbandryConfig.isHusbandryType(null));
         assertThrows(UnsupportedOperationException.class, () -> HusbandryConfig.species().clear()); assertThrows(UnsupportedOperationException.class, () -> HusbandryConfig.qualityBands().clear());
+    }
+
+    @Test void mountSharesApplyToEveryStatAndTheOldSpeedNameStillLoads() throws Exception {
+        load("mounts:\n  shares: {min-pct: 0.2, genetics-pct: 0.6, care-pct: 0.2}\n  speed: {min-pct: 0.9}\n");
+        assertEquals(0.2, HusbandryConfig.mountMinPct()); assertEquals(0.6, HusbandryConfig.mountGeneticsPct()); assertEquals(0.2, HusbandryConfig.mountCarePct());
+        assertTrue(HusbandryConfig.mounts().isEmpty(), "Neither section is a mount type");
+        load("mounts:\n  speed: {min-pct: 0.3}\n");
+        assertEquals(0.3, HusbandryConfig.mountMinPct()); assertEquals(0.5, HusbandryConfig.mountGeneticsPct()); assertEquals(0.1, HusbandryConfig.mountCarePct());
     }
 
     @Test void legacyDurationsAndEmptySectionsRemainSupported() throws Exception {
@@ -171,7 +179,7 @@ public class HusbandryLoaderCoverageTest {
         assertEquals(List.of("", "", "", "", "", "", ""), List.of(HusbandryConfig.tameItem(), HusbandryConfig.coOwnItem(), HusbandryConfig.feedItem(), HusbandryConfig.gloveItem(), HusbandryConfig.neuterItem(), HusbandryConfig.inspectItem(), HusbandryConfig.mountStatsItem()));
         assertEquals(Set.of(EntityType.COW), HusbandryConfig.removeUnowned()); assertTrue(HusbandryConfig.species().isEmpty()); assertEquals(2, HusbandryConfig.starsForGenetics(0)); assertEquals(3, HusbandryConfig.roastCutsFor(0)); assertEquals(4, HusbandryConfig.woolFor(0));
         HusbandryConfig.setTrust(-1, -2, -3, -4); assertEquals(0, HusbandryConfig.trustFor(HusbandryTrust.Gesture.FEED)); assertEquals(0, HusbandryConfig.trustFor(HusbandryTrust.Gesture.GLOVE)); assertEquals(0, HusbandryConfig.trustFor(HusbandryTrust.Gesture.PET)); assertEquals(0, HusbandryConfig.petCooldownSeconds());
-        HusbandryConfig.setMountSpeedShares(-1, -2, -3); assertEquals(0, HusbandryConfig.mountSpeedMinPct()); assertEquals(0, HusbandryConfig.mountSpeedGeneticsPct()); assertEquals(0, HusbandryConfig.mountSpeedCarePct());
+        HusbandryConfig.setMountShares(-1, -2, -3); assertEquals(0, HusbandryConfig.mountMinPct()); assertEquals(0, HusbandryConfig.mountGeneticsPct()); assertEquals(0, HusbandryConfig.mountCarePct());
         HusbandryConfig.setBreeding(-1, 0.2, -3); assertEquals(0, HusbandryConfig.geneticVarianceMultiplier()); assertEquals(0.2, HusbandryConfig.geneticSlowdownDivisor()); assertEquals(0, HusbandryConfig.careInfluence());
         HusbandryConfig.setStatsRevision(null); HusbandryConfig.setProfessionExp(null, null); assertEquals("", HusbandryConfig.statsRevision()); assertEquals("", HusbandryConfig.professionId()); assertEquals(6, HusbandryConfig.expFor(null).min());
         assertEquals(0, HusbandryConfig.resolveMilkTimerSeconds(0, -1)); assertEquals(2, HusbandryConfig.resolveMilkTimerSeconds(2, -1)); assertEquals(0, HusbandryConfig.resolveWoolTimerSeconds(0, -1)); assertEquals(2, HusbandryConfig.resolveWoolTimerSeconds(2, -1));

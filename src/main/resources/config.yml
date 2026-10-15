@@ -388,7 +388,7 @@ quality-from-genetics:
 mounts:
   # Every stat (health, speed, jump) is max * (min-pct + genetics-pct * gene + care-pct * trust),
   # never below the type's minimum. Genes come from breeding; full genes and trust reach the max.
-  speed:
+  shares:
     min-pct: 0.40
     genetics-pct: 0.50
     care-pct: 0.10

@@ -23,7 +23,7 @@ class HusbandryMountGenesTest {
         f = new Farm(directory);
         f.config.set("max-genetics", 1000); f.config.set("care-max", 200); f.config.set("initial-genetic-max", 20);
         f.config.set("mounts.HORSE", java.util.Map.of("min-health", 10, "max-health", 30, "min-speed", 0.1, "max-speed", 0.3, "min-jump", 0.4, "max-jump", 1.0));
-        f.config.set("mounts.speed.min-pct", 0.4); f.config.set("mounts.speed.genetics-pct", 0.5); f.config.set("mounts.speed.care-pct", 0.1);
+        f.config.set("mounts.shares.min-pct", 0.4); f.config.set("mounts.shares.genetics-pct", 0.5); f.config.set("mounts.shares.care-pct", 0.1);
         f.reload();
     }
 

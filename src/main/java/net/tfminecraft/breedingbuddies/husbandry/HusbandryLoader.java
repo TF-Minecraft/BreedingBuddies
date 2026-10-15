@@ -70,10 +70,10 @@ public final class HusbandryLoader {
                 config.getDouble("breeding.genetic-variance-multiplier", 1),
                 config.getDouble("breeding.genetic-slowdown-divisor", 1),
                 parseAmountBands(config.getMapList("amount-from-genetics")));
-        HusbandryConfig.setMountSpeedShares(
-                config.getDouble("mounts.speed.min-pct", 0.40),
-                config.getDouble("mounts.speed.genetics-pct", 0.50),
-                config.getDouble("mounts.speed.care-pct", 0.10));
+        HusbandryConfig.setMountShares(
+                mountShare(config, "min-pct", 0.40),
+                mountShare(config, "genetics-pct", 0.50),
+                mountShare(config, "care-pct", 0.10));
         HusbandryConfig.setBreeding(
                 config.getDouble("breeding.genetic-variance-multiplier", 0.4),
                 config.getDouble("breeding.genetic-slowdown-divisor", 0.4),
@@ -207,13 +207,27 @@ public final class HusbandryLoader {
         return bands;
     }
 
+    /** Mount stat shares live in mounts.shares; Cooking named them mounts.speed although they apply to every stat. */
+    private static double mountShare(FileConfiguration config, String key, double fallback) {
+        if (config.contains("mounts.shares." + key)) {
+            return config.getDouble("mounts.shares." + key);
+        }
+        if (config.contains("mounts.speed." + key)) {
+            Bukkit.getLogger().warning("[BreedingBuddies] config.yml uses mounts.speed." + key
+                    + "; rename it to mounts.shares." + key + ", which applies to health, speed and jump.");
+            return config.getDouble("mounts.speed." + key);
+        }
+        return fallback;
+    }
+
     private static Map<EntityType, HusbandryMountStats> parseMounts(ConfigurationSection section) {
         Map<EntityType, HusbandryMountStats> mounts = new EnumMap<>(EntityType.class);
         if (section == null) {
             return mounts;
         }
         for (String key : section.getKeys(false)) {
-            if ("speed".equalsIgnoreCase(key)
+            if ("shares".equalsIgnoreCase(key)
+                    || "speed".equalsIgnoreCase(key)
                     || "nerf".equalsIgnoreCase(key)
                     || "nerf-divisor".equalsIgnoreCase(key)) {
                 continue;
@@ -314,7 +328,7 @@ public final class HusbandryLoader {
                 1,
                 1,
                 List.of(new HusbandryAmountBand(0, 1, 1)));
-        HusbandryConfig.setMountSpeedShares(0.40, 0.50, 0.10);
+        HusbandryConfig.setMountShares(0.40, 0.50, 0.10);
         HusbandryConfig.setBreeding(0.4, 0.4, 0.02);
         HusbandryConfig.setStatsRevision("1");
         HusbandryConfig.setRestoreLostAnimals(true);

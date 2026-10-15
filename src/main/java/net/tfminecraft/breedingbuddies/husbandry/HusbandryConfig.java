@@ -48,9 +48,9 @@ public final class HusbandryConfig {
     private static String statsRevision = "1";
     private static boolean restoreLostAnimals = true;
     private static List<HusbandryAmountBand> amountBands = List.of();
-    private static double mountSpeedMinPct = 0.40;
-    private static double mountSpeedGeneticsPct = 0.50;
-    private static double mountSpeedCarePct = 0.10;
+    private static double mountMinPct = 0.40;
+    private static double mountGeneticsPct = 0.50;
+    private static double mountCarePct = 0.10;
     private static int trustFeed = 10;
     private static int trustGlove = 10;
     private static int trustPet = 5;
@@ -137,10 +137,10 @@ public final class HusbandryConfig {
         amountBands = List.copyOf(amountBandsValue);
     }
 
-    public static void setMountSpeedShares(double minPct, double geneticsPct, double carePct) {
-        mountSpeedMinPct = Math.max(0, minPct);
-        mountSpeedGeneticsPct = Math.max(0, geneticsPct);
-        mountSpeedCarePct = Math.max(0, carePct);
+    public static void setMountShares(double minPct, double geneticsPct, double carePct) {
+        mountMinPct = Math.max(0, minPct);
+        mountGeneticsPct = Math.max(0, geneticsPct);
+        mountCarePct = Math.max(0, carePct);
     }
 
     public static void setBreeding(double multiplier, double slowdown, double careInfluenceValue) {
@@ -204,16 +204,16 @@ public final class HusbandryConfig {
         return statsRevision;
     }
 
-    public static double mountSpeedMinPct() {
-        return mountSpeedMinPct;
+    public static double mountMinPct() {
+        return mountMinPct;
     }
 
-    public static double mountSpeedGeneticsPct() {
-        return mountSpeedGeneticsPct;
+    public static double mountGeneticsPct() {
+        return mountGeneticsPct;
     }
 
-    public static double mountSpeedCarePct() {
-        return mountSpeedCarePct;
+    public static double mountCarePct() {
+        return mountCarePct;
     }
 
     public static int maxAnimals() {

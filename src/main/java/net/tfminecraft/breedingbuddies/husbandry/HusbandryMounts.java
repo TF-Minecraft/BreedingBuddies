@@ -198,8 +198,8 @@ public final class HusbandryMounts {
                 animal.care(),
                 HusbandryConfig.maxGenetics(),
                 HusbandryConfig.careMax(),
-                HusbandryConfig.mountSpeedMinPct(),
-                HusbandryConfig.mountSpeedGeneticsPct(),
-                HusbandryConfig.mountSpeedCarePct());
+                HusbandryConfig.mountMinPct(),
+                HusbandryConfig.mountGeneticsPct(),
+                HusbandryConfig.mountCarePct());
     }
 }
