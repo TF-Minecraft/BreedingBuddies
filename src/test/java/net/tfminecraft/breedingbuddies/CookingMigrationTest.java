@@ -32,7 +32,7 @@ class CookingMigrationTest {
         verifyNoInteractions(logger);
     }
 
-    @Test void theFirstStartCopiesCookingsDatabaseJournalAndSettingsAndKeepsTheOriginals() throws Exception {
+    @Test void theFirstStartCopiesCookingsDatabaseAndJournalButNotItsSettings() throws Exception {
         write(cooking.resolve("Data/husbandry.db"), "records");
         write(cooking.resolve("Data/husbandry.db-wal"), "journal");
         write(cooking.resolve("Data/husbandry.db-shm"), "index");
@@ -44,13 +44,12 @@ class CookingMigrationTest {
         assertEquals("records", Files.readString(target));
         assertEquals("journal", Files.readString(Path.of(target + "-wal")));
         assertFalse(Files.exists(Path.of(target + "-shm")), "SQLite rebuilds the index; a stale one is never copied");
-        assertEquals("enabled: false\nmax-animals: 9\n", Files.readString(data.toPath().resolve("config.yml")));
+        assertFalse(Files.exists(data.toPath().resolve("config.yml")), "BreedingBuddies starts from its own defaults");
         assertTrue(Files.exists(cooking.resolve("Data/husbandry.db")));
-        assertTrue(Files.exists(cooking.resolve("husbandry.yml")));
-        verify(logger, times(2)).info(anyString());
+        verify(logger).info(anyString());
     }
 
-    @Test void anUnfinishedCopyIsRedoneButExistingRecordsAndSettingsAreNeverReplaced() throws Exception {
+    @Test void anUnfinishedCopyIsRedoneButExistingRecordsAreNeverReplaced() throws Exception {
         write(cooking.resolve("Data/husbandry.db"), "records");
         write(data.toPath().resolve(CookingMigration.DATABASE + "-wal"), "partial");
 
@@ -61,12 +60,9 @@ class CookingMigrationTest {
         assertEquals("partial", Files.readString(Path.of(target + "-wal")), "Without a Cooking journal nothing overwrites it");
 
         write(cooking.resolve("Data/husbandry.db"), "newer");
-        write(cooking.resolve("husbandry.yml"), "max-animals: 9\n");
-        write(data.toPath().resolve("config.yml"), "max-animals: 3\n");
         CookingMigration.run(data, logger);
 
         assertEquals("records", Files.readString(target));
-        assertEquals("max-animals: 3\n", Files.readString(data.toPath().resolve("config.yml")));
     }
 
     private static void write(Path file, String text) throws Exception {

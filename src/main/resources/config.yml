@@ -392,13 +392,14 @@ mounts:
     min-pct: 0.40
     genetics-pct: 0.50
     care-pct: 0.10
+  # Horse maximums as tuned on TF Main.
   HORSE:
     min-health: 10
-    max-health: 20
+    max-health: 27
     min-speed: 0.0675
-    max-speed: 0.2025
+    max-speed: 0.27
     min-jump: 0.24
-    max-jump: 0.6
+    max-jump: 0.8
   DONKEY:
     min-health: 10
     max-health: 20
