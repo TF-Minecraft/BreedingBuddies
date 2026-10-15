@@ -49,8 +49,8 @@ public final class HusbandryConfig {
     private static boolean restoreLostAnimals = true;
     private static List<HusbandryAmountBand> amountBands = List.of();
     private static double mountMinPct = 0.40;
-    private static double mountGeneticsPct = 0.50;
-    private static double mountCarePct = 0.10;
+    private static double mountGeneticsPct = 0.30;
+    private static double mountCarePct = 0.30;
     private static int trustFeed = 10;
     private static int trustGlove = 10;
     private static int trustPet = 5;

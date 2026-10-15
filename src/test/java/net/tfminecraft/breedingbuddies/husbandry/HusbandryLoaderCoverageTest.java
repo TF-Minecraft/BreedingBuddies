@@ -134,7 +134,7 @@ public class HusbandryLoaderCoverageTest {
         assertEquals(0.2, HusbandryConfig.mountMinPct()); assertEquals(0.6, HusbandryConfig.mountGeneticsPct()); assertEquals(0.2, HusbandryConfig.mountCarePct());
         assertTrue(HusbandryConfig.mounts().isEmpty(), "Neither section is a mount type");
         load("mounts:\n  speed: {min-pct: 0.3}\n");
-        assertEquals(0.3, HusbandryConfig.mountMinPct()); assertEquals(0.5, HusbandryConfig.mountGeneticsPct()); assertEquals(0.1, HusbandryConfig.mountCarePct());
+        assertEquals(0.3, HusbandryConfig.mountMinPct()); assertEquals(0.3, HusbandryConfig.mountGeneticsPct()); assertEquals(0.3, HusbandryConfig.mountCarePct());
     }
 
     @Test void legacyDurationsAndEmptySectionsRemainSupported() throws Exception {
