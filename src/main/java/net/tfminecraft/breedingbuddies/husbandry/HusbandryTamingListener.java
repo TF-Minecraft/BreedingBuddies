@@ -168,6 +168,7 @@ public final class HusbandryTamingListener implements Listener {
                 animal.uuid().toString(),
                 ChatColor.GRAY + "Linked to " + label);
         player.sendMessage("§aLinked to " + label + ".");
+        HusbandryFx.playBond(entity);
     }
 
     private static void handleCoOwnOnPlayer(Player actor, Player target, ItemStack hand) {
@@ -203,6 +204,7 @@ public final class HusbandryTamingListener implements Listener {
             case TARGET_AT_CAP -> actor.sendMessage("§cThat player already owns too many animals.");
             case OK -> {
                 HusbandryItems.consumeOne(hand);
+                HusbandryFx.playBond(target);
                 String label = animal.name() != null && !animal.name().isBlank() ? animal.name() : "animal";
                 if (actor.equals(target)) {
                     actor.sendMessage("§aYou are now a co-owner of " + label + ".");

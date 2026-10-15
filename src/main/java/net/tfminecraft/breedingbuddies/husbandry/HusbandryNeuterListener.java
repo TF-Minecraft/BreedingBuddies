@@ -50,7 +50,7 @@ public final class HusbandryNeuterListener implements Listener {
         animal.setNeutered(true);
         repository.upsertAnimal(animal);
         HusbandryItems.useFromMainHand(player);
-        HusbandryFx.playCare(living);
+        HusbandryFx.playNeuter(living);
         player.sendMessage("§aNeutered.");
     }
 }
