@@ -46,6 +46,7 @@ public final class HusbandryHarvest {
 
     public enum ShearResult {
         IMMATURE,
+        UNWELL,
         COOLDOWN,
         DONE
     }
@@ -59,6 +60,9 @@ public final class HusbandryHarvest {
         }
         if (!HusbandryGrowth.isMature(animal, nowMillis)) {
             return ShearResult.IMMATURE;
+        }
+        if (!HusbandrySimulator.isHappy(animal)) {
+            return ShearResult.UNWELL;
         }
         if (animal.woolReadyAt() != null && animal.woolReadyAt() > nowMillis) {
             return ShearResult.COOLDOWN;
@@ -79,6 +83,12 @@ public final class HusbandryHarvest {
                 player.sendMessage("§cThis animal is still growing up.");
             }
             return ShearResult.IMMATURE;
+        }
+        if (readiness == ShearResult.UNWELL) {
+            if (player != null) {
+                player.sendMessage("§cThis animal needs care before it gives wool.");
+            }
+            return ShearResult.UNWELL;
         }
         if (readiness != ShearResult.DONE) {
             if (player != null) {

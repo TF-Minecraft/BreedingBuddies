@@ -64,6 +64,10 @@ public final class HusbandryHarvestListener implements Listener {
             player.sendMessage("§cThis animal is still growing up.");
             return;
         }
+        if (!HusbandrySimulator.isHappy(animal)) {
+            player.sendMessage("§cThis animal needs care before it gives milk.");
+            return;
+        }
         if (onMilkCooldown(animal, living.getType(), now)) {
             if (shouldMessageCooldown(animal, now)) {
                 player.sendMessage("§cThis animal is not ready to be milked.");

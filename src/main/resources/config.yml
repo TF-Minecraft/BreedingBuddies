@@ -138,22 +138,12 @@ species:
         legendary:
           - { path: m.materials.epic_leather, amount: 8, weight: 40 }
           - { path: m.materials.legendary_leather, amount: 4, weight: 60 }
+    # Manure for the fields. Swap the path for the server's fertiliser item if it has one.
     shed:
       drops:
         mode: counted
         common:
-          - { path: m.materials.leather, amount: 1, weight: 100 }
-        rare:
-          - { path: m.materials.leather, amount: 2, weight: 20 }
-          - { path: m.materials.rare_leather, amount: 1, weight: 60 }
-          - { path: m.materials.epic_leather, amount: 1, weight: 20 }
-        epic:
-          - { path: m.materials.rare_leather, amount: 2, weight: 20 }
-          - { path: m.materials.epic_leather, amount: 1, weight: 60 }
-          - { path: m.materials.legendary_leather, amount: 1, weight: 20 }
-        legendary:
-          - { path: m.materials.epic_leather, amount: 2, weight: 40 }
-          - { path: m.materials.legendary_leather, amount: 1, weight: 60 }
+          - { path: v.bone_meal, amount: 2, weight: 100 }
   PIG:
     slaughter:
       meat: "meat(type=roast;origin=Pork)"
@@ -167,6 +157,7 @@ species:
         legendary:
           - { path: "", weight: 80 }
           - { path: m.currency.enchanted_dust, amount: 2, weight: 20 }
+    # Rooting about, a happy pig sometimes turns something up.
     shed:
       drops:
         rare:
@@ -233,6 +224,7 @@ species:
         legendary:
           - { path: m.materials.epic_feather, amount: 8, weight: 40 }
           - { path: m.materials.legendary_feather, amount: 4, weight: 60 }
+    # Feathers from moulting.
     shed:
       drops:
         mode: counted
@@ -362,18 +354,18 @@ species:
       drops:
         mode: counted
         common:
-          - { path: v.feather, amount: 4, weight: 100 }
+          - { path: m.materials.leather, amount: 4, weight: 100 }
         rare:
-          - { path: v.feather, amount: 8, weight: 20 }
-          - { path: m.materials.rare_feather, amount: 4, weight: 60 }
-          - { path: m.materials.epic_feather, amount: 2, weight: 20 }
+          - { path: m.materials.leather, amount: 8, weight: 20 }
+          - { path: m.materials.rare_leather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_leather, amount: 2, weight: 20 }
         epic:
-          - { path: m.materials.rare_feather, amount: 8, weight: 20 }
-          - { path: m.materials.epic_feather, amount: 4, weight: 60 }
-          - { path: m.materials.legendary_feather, amount: 2, weight: 20 }
+          - { path: m.materials.rare_leather, amount: 8, weight: 20 }
+          - { path: m.materials.epic_leather, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_leather, amount: 2, weight: 20 }
         legendary:
-          - { path: m.materials.epic_feather, amount: 8, weight: 40 }
-          - { path: m.materials.legendary_feather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_leather, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_leather, amount: 4, weight: 60 }
 
 damage:
   other-players: true

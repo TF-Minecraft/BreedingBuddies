@@ -34,6 +34,7 @@ final class HusbandryShed {
             animal.setShedReadyAt(nowMillis + HusbandryConfig.shedTimerSeconds() * 1000L);
             return;
         }
+        HusbandryFx.playShed(entity);
         for (ItemStack stack : HusbandryDropRoller.rollShedDrops(animal, ThreadLocalRandom.current())) {
             if (stack != null) {
                 entity.getWorld().dropItemNaturally(entity.getLocation(), stack);
