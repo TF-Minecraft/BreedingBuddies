@@ -331,7 +331,7 @@ class BreedingBuddiesTest extends PluginTestBase {
         assertEquals(List.of("spawnanimal", "spawnmount"), plugin.onTabComplete(admin, command, "bb", new String[] {"SP"}));
 
         List<String> animals = plugin.onTabComplete(admin, command, "bb", new String[] {"spawnanimal", "c"});
-        assertTrue(animals.containsAll(List.of("CAMEL", "CAT", "CHICKEN", "COW")));
+        assertEquals(List.of("COW"), animals);
         assertFalse(animals.contains("COD"), "fish are not animals");
         assertFalse(animals.contains("CREEPER"));
         assertEquals(List.of("100", "1000", "10000"), plugin.onTabComplete(admin, command, "bb", new String[] {"spawnanimal", "COW", ""}));
@@ -350,4 +350,41 @@ class BreedingBuddiesTest extends PluginTestBase {
         when(other.getName()).thenReturn("other");
         assertNull(plugin.onTabComplete(admin, other, "other", new String[] {""}));
     }
+    @Test
+    void animalCompletionUsesTheReloadedTopLevelConfiguredAnimals() throws Exception {
+        PlayerMock admin = admin();
+        assertEquals(List.of("COW", "HORSE"), plugin.onTabComplete(admin, command(), "bb", new String[]{"spawnanimal", ""}));
+        assertEquals(List.of(), plugin.onTabComplete(admin, command(), "bb", new String[]{"spawnanimal", "ca"}));
+        Path path = plugin.getDataFolder().toPath().resolve("bundles.yaml");
+        var config = YamlConfiguration.loadConfiguration(path.toFile());
+        config.set("COW", null);
+        config.set("CAT", config.getConfigurationSection("HORSE").getValues(true));
+        config.set("COD.enabled", true); config.set("CREEPER.enabled", true); config.set("NOT_A_TYPE.enabled", true);
+        config.save(path.toFile());
+        run(admin, "reload");
+        assertEquals(List.of("CAT", "HORSE"), plugin.onTabComplete(admin, command(), "bb", new String[]{"SPAWNANIMAL", ""}));
+        assertEquals(List.of("CAT"), plugin.onTabComplete(admin, command(), "bb", new String[]{"spawnanimal", "cA"}));
+        assertEquals(List.of(), plugin.onTabComplete(admin, command(), "bb", new String[]{"spawnanimal", "cow"}));
+    }
+
+    @Test
+    void numericPresetsRespectCurrentTokenAtEveryPositionWithoutRestrictingFreeNumbers() {
+        PlayerMock admin = admin();
+        for (String[] path : List.of(new String[]{"spawnanimal", "COW"}, new String[]{"spawnanimal", "COW", "100"},
+                new String[]{"spawnmount", "HORSE"}, new String[]{"spawnmount", "HORSE", "100"},
+                new String[]{"spawnmount", "HORSE", "100", "30"}, new String[]{"spawnmount", "HORSE", "100", "30", "0.3"})) {
+            String match = path.length == 2 || path[0].equals("spawnanimal") ? "1000"
+                : path.length == 3 ? "3" : path.length == 4 ? "0.3" : "0.7";
+            List<String> expected = match.equals("1000") ? List.of("1000", "10000")
+                : match.equals("3") ? List.of("30") : List.of(match);
+            String[] args = java.util.Arrays.copyOf(path, path.length + 1);
+            args[path.length] = match;
+            assertEquals(expected, plugin.onTabComplete(admin, command(), "bb", args));
+            args[path.length] = "9";
+            assertEquals(List.of(), plugin.onTabComplete(admin, command(), "bb", args));
+        }
+        assertTrue(run(admin, "spawnanimal", "COW", "9", "11"));
+        assertNotNull(onlyEntityOf(Cow.class));
+    }
+
 }

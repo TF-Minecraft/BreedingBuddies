@@ -545,26 +545,28 @@ mountNerfDivisor: 2.0             # Applied if nerfMountStats is true; divides t
         if (args.length == 1) {
             // Sugerir subcomandos
             return subCommands.keySet().stream()
-                    .filter(sub -> sub.startsWith(args[0].toLowerCase()))
+                    .filter(sub -> sub.startsWith(args[0].toLowerCase(java.util.Locale.ROOT)))
                     .sorted()
                     .toList();
         }
 
-        String sub = args[0].toLowerCase();
+        String sub = args[0].toLowerCase(java.util.Locale.ROOT);
 
         if (sub.equals("spawnanimal")) {
             switch (args.length) {
                 case 2: // EntityType
                     return Arrays.stream(EntityType.values())
+                            .filter(EntityType::isSpawnable)
                             .filter(type -> type.getEntityClass() != null && Animals.class.isAssignableFrom(type.getEntityClass()))
                             .map(Enum::name)
-                            .filter(name -> name.startsWith(args[1].toUpperCase()))
+                            .filter(name -> bundlesConfig.getKeys(false).contains(name))
+                            .filter(name -> name.startsWith(args[1].toUpperCase(java.util.Locale.ROOT)))
                             .sorted()
                             .toList();
                 case 3: // Friendship
-                    return List.of("100", "1000", "10000");
+                    return matchingPresets(List.of("100", "1000", "10000"), args[args.length - 1]);
                 case 4: // Genetics
-                    return List.of("100", "1000", "10000");
+                    return matchingPresets(List.of("100", "1000", "10000"), args[args.length - 1]);
             }
         }
 
@@ -574,20 +576,24 @@ mountNerfDivisor: 2.0             # Applied if nerfMountStats is true; divides t
                     return Arrays.stream(EntityType.values())
                             .filter(type -> type.getEntityClass() != null && AbstractHorse.class.isAssignableFrom(type.getEntityClass()))
                             .map(Enum::name)
-                            .filter(name -> name.startsWith(args[1].toUpperCase()))
+                            .filter(name -> name.startsWith(args[1].toUpperCase(java.util.Locale.ROOT)))
                             .sorted()
                             .toList();
                 case 3: // Friendship
-                    return List.of("100", "1000", "10000");
+                    return matchingPresets(List.of("100", "1000", "10000"), args[args.length - 1]);
                 case 4: // Health
-                    return List.of("15", "30");
+                    return matchingPresets(List.of("15", "30"), args[args.length - 1]);
                 case 5: // Speed
-                    return List.of("0.2", "0.25", "0.3");
+                    return matchingPresets(List.of("0.2", "0.25", "0.3"), args[args.length - 1]);
                 case 6: // Jump
-                    return List.of("0.5", "0.7", "1.0");
+                    return matchingPresets(List.of("0.5", "0.7", "1.0"), args[args.length - 1]);
             }
         }
 
         return Collections.emptyList();
+    }
+
+    private List<String> matchingPresets(List<String> values, String prefix) {
+        return values.stream().filter(value -> value.startsWith(prefix)).toList();
     }
 }
