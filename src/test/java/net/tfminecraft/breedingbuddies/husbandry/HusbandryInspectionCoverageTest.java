@@ -40,30 +40,35 @@ class HusbandryInspectionCoverageTest {
     @Test void unnamedAnimalsHaveAReadableInspectionTitleAndName() {
         Cow cow = f.spawn(Cow.class); HusbandryAnimal animal = f.record(cow); animal.setName(null);
         HusbandryInspectGui.open(f.player, cow, animal);
-        assertEquals("§6Cow", f.player.getOpenInventory().getTitle()); assertEquals("§6Cow", name(f.player.getOpenInventory().getTopInventory(), 4));
+        assertEquals("Cow", plain(f.player.getOpenInventory().title())); assertEquals("Cow", name(f.player.getOpenInventory().getTopInventory(), HusbandryInspectGui.NAME_SLOT));
     }
 
-    @Test void inspectionShowsCareYieldOwnersProductsAndGrowth() {
+    @Test void inspectionShowsTheBreedingBuddiesRowsOfTrustAndGenetics() {
         Cow cow = f.spawn(Cow.class); HusbandryAnimal animal = f.record(cow); animal.setCare(40); animal.setGenetics(600); f.own(animal, f.player);
         HusbandryInspectGui.open(f.player, cow, animal); Inventory inventory = f.player.getOpenInventory().getTopInventory();
         HusbandryInspectHolder holder = (HusbandryInspectHolder) inventory.getHolder(); assertEquals(animal.uuid(), holder.animalUuid()); assertSame(inventory, holder.getInventory());
-        assertEquals(54, inventory.getSize()); assertEquals("§aHappy", name(inventory, 0)); assertEquals("§aNot neutered", name(inventory, 1));
-        assertEquals(List.of("§7owner: Farmer"), lore(inventory, 2)); assertTrue(lore(inventory, 3).contains("§aYield 24%")); assertTrue(lore(inventory, 4).contains("§7Mature"));
-        assertEquals(Material.WRITABLE_BOOK, inventory.getItem(8).getType());
-        for (int slot = 20; slot < 25; slot++) assertEquals(slot < 22 ? Material.GREEN_CONCRETE : Material.GRAY_CONCRETE, inventory.getItem(slot).getType());
-        assertEquals(List.of("§740/100"), lore(inventory, 20)); assertEquals(Material.GREEN_CONCRETE, inventory.getItem(40).getType()); assertEquals(Material.GRAY_CONCRETE, inventory.getItem(41).getType());
+        assertEquals(27, inventory.getSize()); assertEquals("Happy", name(inventory, HusbandryInspectGui.STATUS_SLOT)); assertEquals("Not neutered", name(inventory, HusbandryInspectGui.NEUTERED_SLOT));
+        assertEquals(List.of("owner: Farmer"), lore(inventory, HusbandryInspectGui.OWNERS_SLOT)); assertTrue(lore(inventory, HusbandryInspectGui.PRODUCTS_SLOT).contains("Yield 24%")); assertTrue(lore(inventory, HusbandryInspectGui.NAME_SLOT).contains("Grown up"));
+        assertEquals(Material.WRITABLE_BOOK, inventory.getItem(26).getType());
+        for (int i = 0; i < 5; i++) assertEquals(i < 2 ? Material.RED_DYE : Material.GRAY_DYE, inventory.getItem(HusbandryInspectGui.TRUST_START + i).getType());
+        assertEquals("Trust ❤❤❤❤❤", name(inventory, HusbandryInspectGui.TRUST_START)); assertEquals("40/100", lore(inventory, HusbandryInspectGui.TRUST_START).getFirst());
+        for (int i = 0; i < 5; i++) assertEquals(i < 3 ? Material.SLIME_SPAWN_EGG : Material.VEX_SPAWN_EGG, inventory.getItem(HusbandryInspectGui.GENETICS_START + i).getType());
+        assertTrue(name(inventory, HusbandryInspectGui.GENETICS_START).startsWith("Genetics ★★★★★")); assertEquals("600/1000", lore(inventory, HusbandryInspectGui.GENETICS_START).getFirst());
         animal.setNeutered(true); animal.setMatureAt(System.currentTimeMillis() + 3_600_000); animal.setHungrySince(System.currentTimeMillis());
-        HusbandryInspectGui.open(f.neighbour, cow, animal); inventory = f.neighbour.getOpenInventory().getTopInventory(); assertNull(inventory.getItem(8)); assertEquals("§cNeutered", name(inventory, 1)); assertTrue(lore(inventory, 0).contains("§6Hungry")); assertTrue(lore(inventory, 0).stream().anyMatch(l -> l.startsWith("§eDecay in "))); assertTrue(lore(inventory, 4).get(2).startsWith("§7Grows up in "));
+        HusbandryInspectGui.open(f.neighbour, cow, animal); inventory = f.neighbour.getOpenInventory().getTopInventory(); assertNull(inventory.getItem(26)); assertEquals("Neutered", name(inventory, HusbandryInspectGui.NEUTERED_SLOT));
+        assertTrue(lore(inventory, HusbandryInspectGui.STATUS_SLOT).contains("Hungry: feed it Universal Feed.")); assertTrue(lore(inventory, HusbandryInspectGui.STATUS_SLOT).stream().anyMatch(l -> l.startsWith("It starts losing trust in "))); assertTrue(lore(inventory, HusbandryInspectGui.NAME_SLOT).get(1).startsWith("Grows up in "));
     }
 
-    @Test void inspectionDisplaysMountStatsAndAllAfflictionStatuses() throws Exception {
-        Horse horse = f.spawn(Horse.class); HusbandryAnimal animal = f.record(horse); HusbandryMounts.applyStats(horse, animal);
+    @Test void inspectionDisplaysMountStatGenesAndAllAfflictionStatuses() throws Exception {
+        Horse horse = f.spawn(Horse.class); HusbandryAnimal animal = f.record(horse); HusbandryMountGenes.set(animal, 300, 600, 900); HusbandryMounts.applyStats(horse, animal);
         HusbandryInspectGui.open(f.player, horse, animal); Inventory inventory = f.player.getOpenInventory().getTopInventory();
-        assertEquals("§dHealth: 12.5 hearts", name(inventory, 46)); assertEquals("§bSpeed: 8.43 b/s", name(inventory, 49)); assertTrue(name(inventory, 52).endsWith(" blocks")); assertNull(inventory.getItem(3)); assertEquals(List.of("§7None (untamed)"), lore(inventory, 2));
-        animal.setDirtySince(1L); HusbandryInspectGui.open(f.player, horse, animal); inventory = f.player.getOpenInventory().getTopInventory(); assertTrue(lore(inventory, 0).contains("§eDirty")); assertTrue(lore(inventory, 0).get(1).startsWith("§cDecaying (−1 / "));
-        f.config.set("care-down-per-hour", 0.5); f.reload(); animal.setHungrySince(2L); HusbandryInspectGui.open(f.player, horse, animal); inventory = f.player.getOpenInventory().getTopInventory(); assertTrue(lore(inventory, 0).contains("§6Hungry")); assertTrue(lore(inventory, 0).get(2).startsWith("§cDecaying (−0.5 / "));
-        animal.setDirtySince(null); HusbandryInspectGui.open(f.player, horse, animal); assertTrue(lore(f.player.getOpenInventory().getTopInventory(), 0).get(1).startsWith("§cDecaying"));
-        Pig pig = f.spawn(Pig.class); HusbandryInspectGui.open(f.player, pig, f.record(pig)); assertNull(f.player.getOpenInventory().getTopInventory().getItem(3));
+        assertEquals(36, inventory.getSize()); assertTrue(name(inventory, HusbandryInspectGui.HEALTH_SLOT).matches("Health \\d+\\.\\d hearts")); assertTrue(name(inventory, HusbandryInspectGui.SPEED_SLOT).endsWith(" blocks/s")); assertTrue(name(inventory, HusbandryInspectGui.JUMP_SLOT).endsWith(" blocks"));
+        assertEquals(List.of("Gene 300/1000"), lore(inventory, HusbandryInspectGui.HEALTH_SLOT)); assertEquals(List.of("Gene 900/1000"), lore(inventory, HusbandryInspectGui.JUMP_SLOT));
+        assertNull(inventory.getItem(HusbandryInspectGui.PRODUCTS_SLOT)); assertEquals(List.of("Nobody yet: tame it with a named token."), lore(inventory, HusbandryInspectGui.OWNERS_SLOT)); assertTrue(lore(inventory, HusbandryInspectGui.STATUS_SLOT).getFirst().contains("ride"));
+        animal.setDirtySince(1L); HusbandryInspectGui.open(f.player, horse, animal); inventory = f.player.getOpenInventory().getTopInventory(); assertTrue(lore(inventory, HusbandryInspectGui.STATUS_SLOT).contains("Dirty: brush it with a Glove.")); assertTrue(lore(inventory, HusbandryInspectGui.STATUS_SLOT).get(1).startsWith("Losing trust: -1 every "));
+        f.config.set("care-down-per-hour", 0.5); f.reload(); animal.setHungrySince(2L); HusbandryInspectGui.open(f.player, horse, animal); inventory = f.player.getOpenInventory().getTopInventory(); assertTrue(lore(inventory, HusbandryInspectGui.STATUS_SLOT).contains("Hungry: feed it Universal Feed.")); assertTrue(lore(inventory, HusbandryInspectGui.STATUS_SLOT).get(2).startsWith("Losing trust: -0.5 every "));
+        animal.setDirtySince(null); HusbandryInspectGui.open(f.player, horse, animal); assertTrue(lore(f.player.getOpenInventory().getTopInventory(), HusbandryInspectGui.STATUS_SLOT).get(1).startsWith("Losing trust"));
+        Pig pig = f.spawn(Pig.class); HusbandryAnimal piglet = f.record(pig); HusbandryInspectGui.open(f.player, pig, piglet); assertNull(f.player.getOpenInventory().getTopInventory().getItem(HusbandryInspectGui.PRODUCTS_SLOT)); assertTrue(lore(f.player.getOpenInventory().getTopInventory(), HusbandryInspectGui.STATUS_SLOT).getFirst().contains("pet"));
         HusbandryInspectGui.open(null, horse, animal); HusbandryInspectGui.open(f.player, null, animal); HusbandryInspectGui.open(f.player, horse, null);
     }
 
@@ -71,7 +76,7 @@ class HusbandryInspectionCoverageTest {
         Cow cow = f.spawn(Cow.class); HusbandryAnimal animal = f.record(cow); UUID owner = UUID.randomUUID(); f.repository.upsertOwner(new HusbandryOwner(animal.uuid(), owner, owner, "coowner"));
         OfflinePlayer unnamed = mock(OfflinePlayer.class);
         try (MockedStatic<Bukkit> bukkit = mockStatic(Bukkit.class, CALLS_REAL_METHODS)) { bukkit.when(() -> Bukkit.getOfflinePlayer(owner)).thenReturn(unnamed); HusbandryInspectGui.open(f.player, cow, animal); }
-        assertEquals(List.of("§7coowner: " + owner), lore(f.player.getOpenInventory().getTopInventory(), 2));
+        assertEquals(List.of("coowner: " + owner), lore(f.player.getOpenInventory().getTopInventory(), HusbandryInspectGui.OWNERS_SLOT));
         assertEquals(0, HusbandryGuiBars.yieldPercent(null)); assertEquals(0, HusbandryGuiBars.filledSegments(10, 0)); assertEquals(0, HusbandryGuiBars.filledSegments(0, 100)); assertEquals(5, HusbandryGuiBars.filledSegments(200, 100));
     }
 
@@ -99,10 +104,12 @@ class HusbandryInspectionCoverageTest {
     @Test void removeButtonReleasesOnlyThisOwnerAndHandlesConcurrentDeletionOrLostOwnership() {
         Cow cow = f.spawn(Cow.class); HusbandryAnimal animal = f.record(cow); f.own(animal, f.player); HusbandryInspectGui.open(f.player, cow, animal);
         InventoryClickEvent unrelated = click(4); listener.onClick(unrelated); assertTrue(unrelated.isCancelled()); assertTrue(HusbandryOwnershipService.isOwner(f.player, animal.uuid())); listener.onClick(click(5));
-        when(f.plugin.getHusbandryRepository()).thenReturn(null); listener.onClick(click(8)); when(f.plugin.getHusbandryRepository()).thenReturn(f.repository); assertTrue(HusbandryOwnershipService.isOwner(f.player, animal.uuid()));
-        listener.onClick(click(8)); assertFalse(HusbandryOwnershipService.isOwner(f.player, animal.uuid())); assertEquals(HusbandryAnimalState.UNTAMED, f.repository.getAnimal(animal.uuid()).orElseThrow().state()); assertTrue(f.player.nextMessage().contains("no longer own"));
-        f.own(animal, f.player); HusbandryInspectGui.open(f.player, cow, animal); f.repository.deleteCharacterOwner(animal.uuid(), f.player.getUniqueId()); listener.onClick(click(8)); assertTrue(f.player.nextMessage().contains("Could not remove"));
-        f.own(animal, f.player); HusbandryInspectGui.open(f.player, cow, animal); HusbandryEntities.evict(animal.uuid()); f.repository.deleteAnimal(animal.uuid()); listener.onClick(click(8)); assertNull(f.player.getOpenInventory().getTopInventory());
+        listener.onClick(click(26)); assertTrue(HusbandryOwnershipService.isOwner(f.player, animal.uuid()), "The first click only asks to confirm");
+        assertEquals("Click again to give it up", name(f.player.getOpenInventory().getTopInventory(), 26));
+        when(f.plugin.getHusbandryRepository()).thenReturn(null); listener.onClick(click(26)); when(f.plugin.getHusbandryRepository()).thenReturn(f.repository); assertTrue(HusbandryOwnershipService.isOwner(f.player, animal.uuid()));
+        listener.onClick(click(26)); assertFalse(HusbandryOwnershipService.isOwner(f.player, animal.uuid())); assertEquals(HusbandryAnimalState.UNTAMED, f.repository.getAnimal(animal.uuid()).orElseThrow().state()); assertTrue(f.player.nextMessage().contains("no longer own"));
+        f.own(animal, f.player); HusbandryInspectGui.open(f.player, cow, animal); f.repository.deleteCharacterOwner(animal.uuid(), f.player.getUniqueId()); listener.onClick(click(26)); listener.onClick(click(26)); assertTrue(f.player.nextMessage().contains("Could not remove"));
+        f.own(animal, f.player); HusbandryInspectGui.open(f.player, cow, animal); HusbandryEntities.evict(animal.uuid()); f.repository.deleteAnimal(animal.uuid()); listener.onClick(click(26)); listener.onClick(click(26)); assertNull(f.player.getOpenInventory().getTopInventory());
         f.player.openInventory(Bukkit.createInventory(null, 9));
         var ordinary = click(0); listener.onClick(ordinary); assertFalse(ordinary.isCancelled());
     }
@@ -167,15 +174,16 @@ class HusbandryInspectionCoverageTest {
     @Test void removalIgnoresOtherHumanViewersAndAReplacedButton() {
         Cow cow = f.spawn(Cow.class); HusbandryAnimal animal = f.record(cow); f.own(animal, f.player); HusbandryInspectGui.open(f.player, cow, animal);
         Inventory top = f.player.getOpenInventory().getTopInventory(); InventoryView view = mock(InventoryView.class); HumanEntity viewer = mock(HumanEntity.class);
-        when(view.getTopInventory()).thenReturn(top); when(view.getInventory(8)).thenReturn(top); when(view.getPlayer()).thenReturn(viewer);
-        InventoryClickEvent nonPlayer = new InventoryClickEvent(view, InventoryType.SlotType.CONTAINER, 8, ClickType.LEFT, InventoryAction.PICKUP_ALL); listener.onClick(nonPlayer); assertTrue(nonPlayer.isCancelled()); assertTrue(HusbandryOwnershipService.isOwner(f.player, animal.uuid()));
-        top.setItem(8, new ItemStack(Material.STONE)); listener.onClick(click(8)); top.setItem(8, null); listener.onClick(click(8)); assertTrue(HusbandryOwnershipService.isOwner(f.player, animal.uuid()));
+        when(view.getTopInventory()).thenReturn(top); when(view.getInventory(26)).thenReturn(top); when(view.getPlayer()).thenReturn(viewer);
+        InventoryClickEvent nonPlayer = new InventoryClickEvent(view, InventoryType.SlotType.CONTAINER, 26, ClickType.LEFT, InventoryAction.PICKUP_ALL); listener.onClick(nonPlayer); assertTrue(nonPlayer.isCancelled()); assertTrue(HusbandryOwnershipService.isOwner(f.player, animal.uuid()));
+        top.setItem(26, new ItemStack(Material.STONE)); listener.onClick(click(26)); top.setItem(26, null); listener.onClick(click(26)); assertTrue(HusbandryOwnershipService.isOwner(f.player, animal.uuid()));
         InventoryClickEvent outside = new InventoryClickEvent(f.player.getOpenInventory(), InventoryType.SlotType.OUTSIDE, -999, ClickType.LEFT, InventoryAction.NOTHING); listener.onClick(outside); assertTrue(outside.isCancelled());
     }
 
     private PlayerInteractEntityEvent interact(Entity entity) { return new PlayerInteractEntityEvent(f.player, entity, EquipmentSlot.HAND); }
-    private static List<String> lore(Inventory inventory, int slot) { return inventory.getItem(slot).getItemMeta().getLore(); }
+    private static List<String> lore(Inventory inventory, int slot) { return inventory.getItem(slot).getItemMeta().lore().stream().map(HusbandryInspectionCoverageTest::plain).toList(); }
+    private static String plain(net.kyori.adventure.text.Component component) { return net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(component); }
 
     private InventoryClickEvent click(int rawSlot) { return new InventoryClickEvent(f.player.getOpenInventory(), InventoryType.SlotType.CONTAINER, rawSlot, ClickType.LEFT, InventoryAction.PICKUP_ALL); }
-    private static String name(Inventory inventory, int slot) { return inventory.getItem(slot).getItemMeta().getDisplayName(); }
+    private static String name(Inventory inventory, int slot) { return plain(inventory.getItem(slot).getItemMeta().displayName()); }
 }

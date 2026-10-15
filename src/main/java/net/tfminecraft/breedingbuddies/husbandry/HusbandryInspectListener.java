@@ -74,7 +74,7 @@ public final class HusbandryInspectListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        if (event.getClickedInventory() != event.getInventory() || event.getRawSlot() != HusbandryInspectGui.REMOVE_SLOT) {
+        if (event.getClickedInventory() != event.getInventory() || event.getRawSlot() != HusbandryInspectGui.removeSlot(event.getInventory())) {
             return;
         }
         if (!(event.getWhoClicked() instanceof Player player)) {
@@ -86,6 +86,12 @@ public final class HusbandryInspectListener implements Listener {
         }
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() != Material.WRITABLE_BOOK) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (!inspect.confirming(now)) {
+            inspect.askToConfirm(now);
+            event.getInventory().setItem(event.getRawSlot(), HusbandryInspectGui.removeItem(true));
             return;
         }
         HusbandryRepository repository = HusbandryEntities.repository();

@@ -190,7 +190,7 @@ class HusbandryCharacterAuthorityTest {
         assertEquals(2,f.repository.listOwners(animal.uuid()).size());
         update(f.repository.ownershipDatabase().getConnection(), "INSERT INTO owners VALUES (?,?,'owner')", animal.uuid().toString(), UUID.randomUUID().toString());
         HusbandryInspectGui.open(f.neighbour,cow,animal);
-        assertTrue(f.neighbour.getOpenInventory().getTopInventory().getItem(2).getItemMeta().getLore().stream().anyMatch(line->line.contains("Unresolved")));
+        assertTrue(f.neighbour.getOpenInventory().getTopInventory().getItem(HusbandryInspectGui.OWNERS_SLOT).getItemMeta().lore().stream().map(line->net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(line)).anyMatch(line->line.contains("Unresolved")));
     }
 
     @Test void vanillaTameableInteractionsCannotUseAccountOwnerWhilePublicLivestockInteractionStays() {
@@ -214,7 +214,7 @@ class HusbandryCharacterAuthorityTest {
         assertEquals(HusbandryOwnershipService.Result.CHARACTER_REQUIRED,HusbandryOwnershipService.claimOwner(f.player,animal,horse,"Stale"));
         HusbandryInspectGui.open(f.player,horse,animal);
         var holder=(HusbandryInspectHolder)f.player.getOpenInventory().getTopInventory().getHolder();assertFalse(holder.isCurrent(f.player));
-        var click=new InventoryClickEvent(f.player.getOpenInventory(),InventoryType.SlotType.CONTAINER,8,ClickType.LEFT,InventoryAction.PICKUP_ALL);
+        var click=new InventoryClickEvent(f.player.getOpenInventory(),InventoryType.SlotType.CONTAINER,35,ClickType.LEFT,InventoryAction.PICKUP_ALL);
         new HusbandryInspectListener().onClick(click);assertEquals(1,f.repository.listOwners(animal.uuid()).size());
         var staleMount=new EntityMountEvent(f.player,horse);new HusbandryMountListener().onMount(staleMount);assertTrue(staleMount.isCancelled());
         var wrong=HusbandryIdentity.session(f.neighbour).orElseThrow();
