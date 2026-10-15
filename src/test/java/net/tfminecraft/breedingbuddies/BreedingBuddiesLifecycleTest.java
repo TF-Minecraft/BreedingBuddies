@@ -170,6 +170,16 @@ class BreedingBuddiesLifecycleTest {
         repositories.verifyNoInteractions();
     }
 
+    @Test void aDataFolderTheServerCannotCreateFailsWithAClearMessage(@org.junit.jupiter.api.io.TempDir Path folder) throws Exception {
+        Path blocked = Files.writeString(folder.resolve("BreedingBuddies"), "not a folder");
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> BreedingBuddies.ensureDirectory(blocked.resolve("Data").toFile()));
+        assertTrue(error.getMessage().startsWith("Could not create "), error.getMessage());
+        BreedingBuddies.ensureDirectory(folder.resolve("Fine").toFile());
+        BreedingBuddies.ensureDirectory(folder.resolve("Fine").toFile());
+        assertTrue(Files.isDirectory(folder.resolve("Fine")));
+    }
+
     @Test void databaseCloseFailureStillClearsTheRepository() {
         BreedingBuddies plugin = loadPlugin();
         doThrow(new IllegalStateException("close failed")).when(repository).close();

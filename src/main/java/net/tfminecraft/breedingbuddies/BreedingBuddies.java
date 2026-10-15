@@ -40,7 +40,7 @@ public class BreedingBuddies extends JavaPlugin {
         }
         plugin = this;
 
-        new File(getDataFolder(), "Data").mkdirs();
+        ensureDirectory(new File(getDataFolder(), "Data"));
         try {
             CookingMigration.run(getDataFolder(), getLogger());
         } catch (IOException ex) {
@@ -75,6 +75,14 @@ public class BreedingBuddies extends JavaPlugin {
         HusbandryTickTask.stop();
         HusbandryLifecycleListener.flushLoadedForDisable();
         closeDatabase();
+    }
+
+    /** Some hosts do not let the server create folders in plugins/; staff then create it once. */
+    static void ensureDirectory(File folder) {
+        if (!folder.mkdirs() && !folder.isDirectory()) {
+            throw new IllegalStateException("Could not create " + folder.getPath()
+                    + "; create it and let the server write to it, then restart");
+        }
     }
 
     /** True while Cooking's own husbandry is on; both must never run the same animals. */
