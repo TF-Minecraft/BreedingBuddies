@@ -136,6 +136,10 @@ class BreedingBuddiesCommandTest {
         assertEquals(List.of("CHICKEN", "COW"), tabs("spawn", "c"));
         assertEquals(List.of("0", "20", "1000"), tabs("spawn", "cow", ""));
         assertEquals(List.of("0", "100", "200"), tabs("spawn", "cow", "1", ""));
+        assertEquals(List.of("20"), tabs("spawn", "cow", "2"));
+        assertEquals(List.of("100"), tabs("spawn", "cow", "1", "1"));
+        assertTrue(tabs("spawn", "cow", "9").isEmpty());
+        assertTrue(tabs("spawn", "cow", "1", "9").isEmpty());
         assertTrue(tabs("spawn", "cow", "1", "2", "").isEmpty());
         assertTrue(tabs("save", "").isEmpty());
     }

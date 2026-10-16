@@ -13,7 +13,7 @@
 
     <properties>
         <tlibs.version>2.6.0</tlibs.version>
-        <cooking.version>0.6.0</cooking.version>
+        <cooking.version>0.5.1</cooking.version>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <argLine></argLine>

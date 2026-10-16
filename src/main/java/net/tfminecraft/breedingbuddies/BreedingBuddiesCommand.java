@@ -135,8 +135,8 @@ public final class BreedingBuddiesCommand implements CommandExecutor, TabComplet
                 types.sort(String.CASE_INSENSITIVE_ORDER);
                 yield matching(types, args[1].toUpperCase(Locale.ROOT));
             }
-            case 3 -> List.of("0", "20", "1000");
-            case 4 -> List.of("0", "100", "200");
+            case 3 -> matching(List.of("0", "20", "1000"), args[2]);
+            case 4 -> matching(List.of("0", "100", "200"), args[3]);
             default -> Collections.emptyList();
         };
     }
