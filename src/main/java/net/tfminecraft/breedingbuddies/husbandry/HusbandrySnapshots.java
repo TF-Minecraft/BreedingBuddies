@@ -84,6 +84,8 @@ public final class HusbandrySnapshots {
         }
         World world = animal.world() == null ? null : Bukkit.getWorld(animal.world());
         if (world == null) {
+            Bukkit.getLogger().severe("[BreedingBuddies] Snapshot of " + animal.uuid()
+                    + " has no loaded world to restore into; records kept for staff review.");
             return RestoreResult.FAILED;
         }
         Entity entity;
