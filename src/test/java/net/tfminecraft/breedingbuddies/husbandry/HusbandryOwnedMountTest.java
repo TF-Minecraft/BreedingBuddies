@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityTameEvent;
 import org.bukkit.inventory.HorseInventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -249,6 +250,7 @@ class HusbandryOwnedMountTest {
     private static Horse horse() {
         Horse horse = mock(Horse.class);
         when(horse.getInventory()).thenReturn(mock(HorseInventory.class));
+        when(horse.getPersistentDataContainer()).thenReturn(mock(PersistentDataContainer.class));
         return horse;
     }
 
