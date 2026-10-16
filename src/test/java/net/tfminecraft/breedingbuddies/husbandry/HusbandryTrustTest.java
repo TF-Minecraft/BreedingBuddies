@@ -8,6 +8,9 @@ import java.util.Random;
 import org.bukkit.Material;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Horse;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
@@ -15,6 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockbukkit.mockbukkit.MockBukkit;
 
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.tfminecraft.breedingbuddies.husbandry.HusbandryRuntimeCoverageTest.Farm;
@@ -97,18 +101,72 @@ class HusbandryTrustTest {
     }
 
     @Test void mountsArePettedByRidingNotByClicking() {
+        registerMountListener();
         Horse horse = f.spawn(Horse.class); HusbandryAnimal animal = f.record(horse); f.own(animal, f.player);
         new HusbandryCareListener().onInteract(new PlayerInteractEntityEvent(f.player, horse));
         assertEquals(0, animal.care());
 
         EntityMountEvent ride = new EntityMountEvent(f.player, horse);
-        new HusbandryMountListener().onMount(ride);
+        f.server.getPluginManager().callEvent(ride);
         assertFalse(ride.isCancelled());
         assertEquals(5, animal.care());
         assertEquals(5, f.repository.getAnimal(animal.uuid()).orElseThrow().care());
 
-        new HusbandryMountListener().onMount(new EntityMountEvent(f.player, horse));
+        f.server.getPluginManager().callEvent(new EntityMountEvent(f.player, horse));
         assertEquals(5, animal.care(), "One ride a day counts");
+    }
+
+    @Test void anAlreadyCancelledRideDoesNotEarnTrustOrConsumeThePetCooldown() {
+        registerMountListener();
+        Horse horse = f.spawn(Horse.class); HusbandryAnimal animal = f.record(horse); f.own(animal, f.player);
+        EntityMountEvent ride = new EntityMountEvent(f.player, horse);
+        ride.setCancelled(true);
+
+        f.server.getPluginManager().callEvent(ride);
+
+        assertNoRideReward(animal);
+    }
+
+    @Test void aRideCancelledAfterOwnershipChecksDoesNotEarnTrustOrConsumeThePetCooldown() {
+        registerMountListener();
+        f.server.getPluginManager().registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.HIGHEST)
+            public void cancelRide(EntityMountEvent event) { event.setCancelled(true); }
+        }, MockBukkit.createMockPlugin());
+        Horse horse = f.spawn(Horse.class); HusbandryAnimal animal = f.record(horse); f.own(animal, f.player);
+        EntityMountEvent ride = new EntityMountEvent(f.player, horse);
+
+        f.server.getPluginManager().callEvent(ride);
+
+        assertTrue(ride.isCancelled());
+        assertNoRideReward(animal);
+    }
+
+    @Test void onlyOwnersRidingMountsEarnTrust() {
+        registerMountListener();
+        Cow cow = f.spawn(Cow.class); HusbandryAnimal animal = f.record(cow); f.own(animal, f.player);
+        f.server.getPluginManager().callEvent(new EntityMountEvent(f.player, cow));
+        assertNoRideReward(animal);
+        Horse horse = f.spawn(Horse.class); HusbandryAnimal mount = f.record(horse);
+        f.server.getPluginManager().callEvent(new EntityMountEvent(f.player, horse));
+        assertNoRideReward(mount);
+        f.own(mount, f.player);
+        f.neighbour.setOp(true);
+        f.server.getPluginManager().callEvent(new EntityMountEvent(f.neighbour, horse));
+        f.server.getPluginManager().callEvent(new EntityMountEvent(cow, horse));
+        assertNoRideReward(mount);
+    }
+
+    private void registerMountListener() {
+        f.server.getPluginManager().registerEvents(new HusbandryMountListener(), MockBukkit.createMockPlugin());
+    }
+
+    private void assertNoRideReward(HusbandryAnimal animal) {
+        assertEquals(0, animal.care());
+        assertNull(animal.lastPetAt());
+        HusbandryAnimal saved = f.repository.getAnimal(animal.uuid()).orElseThrow();
+        assertEquals(0, saved.care());
+        assertNull(saved.lastPetAt());
     }
 
     @Test void neglectWithNoTrustLossConfiguredKeepsTrust() throws Exception {

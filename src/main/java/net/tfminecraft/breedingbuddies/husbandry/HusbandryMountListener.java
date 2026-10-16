@@ -29,7 +29,7 @@ public final class HusbandryMountListener implements Listener {
         if (mount instanceof LivingEntity living) {
             HusbandryAnimal animal = HusbandryMounts.enrollIfNeeded(living);
             if (animal != null) {
-            HusbandryMounts.applyStats(living, animal);
+                HusbandryMounts.applyStats(living, animal);
             }
         }
         if (!HusbandryOwnershipService.hasAnyOwner(mount.getUniqueId())) {
@@ -37,7 +37,6 @@ public final class HusbandryMountListener implements Listener {
             return;
         }
         if (HusbandryOwnershipService.isOwner(player, mount.getUniqueId())) {
-            rideCountsAsPet(player, (LivingEntity) mount);
             return;
         }
         if (HusbandryOwnershipService.isStaff(player)) {
@@ -45,6 +44,18 @@ public final class HusbandryMountListener implements Listener {
         }
         event.setCancelled(true);
         player.sendMessage("§cThis is not your animal.");
+    }
+
+    /** Reward only after other plugins have had their chance to cancel the ride. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onRide(EntityMountEvent event) {
+        if (!(event.getEntity() instanceof Player player)
+                || !(event.getMount() instanceof LivingEntity living)
+                || !HusbandryMounts.isMount(living)
+                || !HusbandryOwnershipService.isOwner(player, living.getUniqueId())) {
+            return;
+        }
+        rideCountsAsPet(player, living);
     }
 
     /** Time in the saddle is a mount's daily pet; the right-click that mounts it never reaches petting. */
