@@ -338,9 +338,9 @@ class HusbandryRemainingCoverageTest {
         try (var bukkit = mockStatic(Bukkit.class, CALLS_REAL_METHODS)) {
             bukkit.when(() -> Bukkit.getWorld("farm")).thenReturn(world); bukkit.when(Bukkit::getUnsafe).thenReturn(unsafe);
             CompletableFuture<Chunk> stopped = new CompletableFuture<>(); when(world.getChunkAtAsync(anyInt(), anyInt())).thenReturn(stopped);
-            assertTrue(HusbandrySnapshots.restore(f.repository, animal, f.repository.listOwners(animal.uuid()))); when(f.plugin.isEnabled()).thenReturn(false); stopped.complete(mock(Chunk.class)); verify(copy, never()).spawnAt(any(), any());
+            assertEquals(HusbandrySnapshots.RestoreResult.SCHEDULED, HusbandrySnapshots.restore(f.repository, animal, f.repository.listOwners(animal.uuid()))); when(f.plugin.isEnabled()).thenReturn(false); stopped.complete(mock(Chunk.class)); verify(copy, never()).spawnAt(any(), any());
             when(f.plugin.isEnabled()).thenReturn(true); CompletableFuture<Chunk> failed = new CompletableFuture<>(); when(world.getChunkAtAsync(anyInt(), anyInt())).thenReturn(failed);
-            assertTrue(HusbandrySnapshots.restore(f.repository, animal, f.repository.listOwners(animal.uuid()))); failed.completeExceptionally(new IOException("Chunk unavailable")); f.server.getScheduler().performTicks(1);
+            assertEquals(HusbandrySnapshots.RestoreResult.SCHEDULED, HusbandrySnapshots.restore(f.repository, animal, f.repository.listOwners(animal.uuid()))); failed.completeExceptionally(new IOException("Chunk unavailable")); f.server.getScheduler().performTicks(1);
             assertTrue(HusbandryLocator.isMissing(animal.uuid())); assertTrue(f.repository.getSnapshot(animal.uuid()).isPresent()); verify(copy, never()).spawnAt(any(), any());
         }
     }

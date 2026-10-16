@@ -121,9 +121,16 @@ public final class HusbandryLocator {
                     continue;
                 }
                 try {
-                    if (HusbandrySnapshots.restore(repository, animal, repository.listOwners(uuid))) {
+                    HusbandrySnapshots.RestoreResult restoration =
+                            HusbandrySnapshots.restore(repository, animal, repository.listOwners(uuid));
+                    if (restoration == HusbandrySnapshots.RestoreResult.SCHEDULED) {
                         MISSING.remove(uuid);
                         restoring++;
+                        continue;
+                    }
+                    if (restoration == HusbandrySnapshots.RestoreResult.FAILED) {
+                        MISSING.add(uuid);
+                        missing++;
                         continue;
                     }
                 } catch (SqliteDatabaseException ex) {
@@ -164,7 +171,7 @@ public final class HusbandryLocator {
         }
         if (located > 0 || restoring > 0 || dropped > 0 || missing > 0 || held > 0 || !result.complete()) {
             String failed = missing > 0
-                    ? ", " + missing + " still marked missing after a failed drop"
+                    ? ", " + missing + " still marked missing after errors"
                     : "";
             Bukkit.getLogger().info("[BreedingBuddies] Animal scan: updated " + located + " locations, restoring "
                     + restoring + " lost animals from snapshots, dropped " + dropped + " ghost animals" + failed
