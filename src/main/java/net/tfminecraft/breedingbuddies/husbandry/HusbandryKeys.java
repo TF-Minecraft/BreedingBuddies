@@ -17,6 +17,9 @@ public final class HusbandryKeys {
     public static final NamespacedKey LINKED_ANIMAL =
             new NamespacedKey(BreedingBuddies.plugin, "linked_animal");
 
+    /** CompanionPets marks its pets' bodies with their pet ID; husbandry never runs them. */
+    static final NamespacedKey COMPANION_PET = new NamespacedKey("companionpets", "pet");
+
     /** Cooking ran livestock before BreedingBuddies; its entities and tokens keep these keys. */
     static final String COOKING = "cooking";
 

@@ -156,7 +156,7 @@ class HusbandryRuntimeCoverageTest {
         doThrow(new SqliteDatabaseException("write failure")).when(f.repository).upsertAnimal(argThat(a -> a != null && a.uuid().equals(failedMove.uuid())));
         try (MockedStatic<HusbandrySnapshots> snapshots = mockStatic(HusbandrySnapshots.class, CALLS_REAL_METHODS);
              Scan scan = new Scan(new HusbandryEntityScan.Result(Map.of(failedMove.uuid(), new HusbandryEntityScan.Found("farm", 3, 4, 5)), Set.of(), true))) {
-            snapshots.when(() -> HusbandrySnapshots.restore(eq(f.repository), argThat(a -> a != null && a.uuid().equals(restoring.uuid())), anyList())).thenReturn(true);
+            snapshots.when(() -> HusbandrySnapshots.restore(eq(f.repository), argThat(a -> a != null && a.uuid().equals(restoring.uuid())), anyList())).thenReturn(HusbandrySnapshots.RestoreResult.SCHEDULED);
             HusbandryLocator.scanUnloaded(); scan.background(); scan.apply();
         }
         assertTrue(f.repository.exists(restoring.uuid())); assertFalse(HusbandryLocator.isMissing(restoring.uuid())); assertTrue(HusbandryLocator.isMissing(failedRead.uuid())); assertTrue(HusbandryLocator.isMissing(failedDrop.uuid()));

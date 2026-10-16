@@ -82,6 +82,12 @@ public final class HusbandryEntities {
         return value != null && value == 1;
     }
 
+    /** True for CompanionPets bodies, including before CompanionPets has enabled at startup. */
+    public static boolean isCompanionPet(Entity entity) {
+        return entity != null
+                && entity.getPersistentDataContainer().has(HusbandryKeys.COMPANION_PET, PersistentDataType.STRING);
+    }
+
     public static void stampManaged(Entity entity) {
         if (entity == null) {
             return;

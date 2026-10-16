@@ -149,6 +149,10 @@ public final class HusbandryLifecycleListener implements Listener {
         if (!(entity instanceof LivingEntity living)) {
             return;
         }
+        // CompanionPets owns these bodies, including when it has not enabled yet at startup.
+        if (HusbandryEntities.isCompanionPet(entity)) {
+            return;
+        }
         HusbandryRepository repository = HusbandryEntities.repository();
         if (repository == null) {
             return;

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static net.tfminecraft.breedingbuddies.husbandry.HusbandrySnapshots.RestoreResult.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -114,7 +115,7 @@ class HusbandrySnapshotsTest {
 
         try (MockedStatic<Bukkit> bukkit = serverWith(world, unsafe);
              MockedStatic<HusbandryLifecycleListener> lifecycle = mockStatic(HusbandryLifecycleListener.class)) {
-            assertTrue(HusbandrySnapshots.restore(repository, animal, owners()));
+            assertEquals(SCHEDULED, HusbandrySnapshots.restore(repository, animal, owners()));
 
             verify(world).getChunkAtAsync(4353 >> 4, 3601 >> 4);
             verify(restored).spawnAt(new Location(world, 4353.0, 355.0, 3601.2),
@@ -130,15 +131,15 @@ class HusbandrySnapshotsTest {
         HusbandryRepository repository = mock(HusbandryRepository.class);
         when(repository.getSnapshot(HORSE)).thenReturn(Optional.empty());
         try (MockedStatic<Bukkit> bukkit = serverWith(world, mock(UnsafeValues.class))) {
-            assertFalse(HusbandrySnapshots.restore(repository, animal, owners()));
+            assertEquals(SKIPPED, HusbandrySnapshots.restore(repository, animal, owners()));
 
             when(repository.getSnapshot(HORSE)).thenReturn(Optional.of(new HusbandrySnapshot(new byte[] {7}, 0L)));
             HusbandryConfig.setRestoreLostAnimals(false);
-            assertFalse(HusbandrySnapshots.restore(repository, animal, owners()));
+            assertEquals(SKIPPED, HusbandrySnapshots.restore(repository, animal, owners()));
 
             HusbandryConfig.setRestoreLostAnimals(true);
             bukkit.when(() -> Bukkit.getWorld("TFMC_Map")).thenReturn(null);
-            assertFalse(HusbandrySnapshots.restore(repository, animal, owners()));
+            assertEquals(FAILED, HusbandrySnapshots.restore(repository, animal, owners()));
         }
         verify(world, never()).getChunkAtAsync(anyInt(), anyInt());
     }
@@ -154,12 +155,22 @@ class HusbandrySnapshotsTest {
         HusbandryRepository repository = mock(HusbandryRepository.class);
         when(repository.getSnapshot(HORSE)).thenReturn(Optional.of(new HusbandrySnapshot(new byte[] {7}, 0L)));
         try (MockedStatic<Bukkit> bukkit = serverWith(world, unsafe)) {
-            assertFalse(HusbandrySnapshots.restore(repository, animal, owners()));
+            assertEquals(FAILED, HusbandrySnapshots.restore(repository, animal, owners()));
 
             when(unsafe.deserializeEntity(new byte[] {7}, world, true)).thenThrow(new IllegalStateException("bad"));
-            assertFalse(HusbandrySnapshots.restore(repository, animal, owners()));
+            assertEquals(FAILED, HusbandrySnapshots.restore(repository, animal, owners()));
         }
         verify(world, never()).getChunkAtAsync(anyInt(), anyInt());
+    }
+
+    @Test
+    void missingRuntimeContextCannotAuthorizeDeletion() {
+        HusbandryRepository repository = mock(HusbandryRepository.class);
+        HusbandryAnimal animal = lostHorse();
+        assertEquals(FAILED, HusbandrySnapshots.restore(null, animal, owners()));
+        assertEquals(FAILED, HusbandrySnapshots.restore(repository, null, owners()));
+        BreedingBuddies.plugin = null;
+        assertEquals(FAILED, HusbandrySnapshots.restore(repository, animal, owners()));
     }
 
     @Test

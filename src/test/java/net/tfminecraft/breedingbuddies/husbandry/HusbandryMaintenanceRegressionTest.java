@@ -16,14 +16,58 @@ import net.tfminecraft.tlibs.character.CharacterRef;
 import net.tfminecraft.tlibs.character.Characters;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
+import org.bukkit.UnsafeValues;
+import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.MockedStatic;
 
 class HusbandryMaintenanceRegressionTest {
     @TempDir Path directory;
+
+    enum SnapshotFailure { EXCEPTION, NULL_ENTITY, WRONG_UUID }
+
+    @ParameterizedTest
+    @EnumSource(SnapshotFailure.class)
+    void unrestorableSnapshotsKeepAnimalOwnersAndRawBackup(SnapshotFailure failure) throws Exception {
+        try (var farm = new HusbandryRuntimeCoverageTest.Farm(directory)) {
+            var repo = farm.repository;
+            HusbandryAnimal animal = farm.ownedOffline("Recoverable animal");
+            repo.upsertOwner(new HusbandryOwner(animal.uuid(), farm.neighbour.getUniqueId(),
+                    farm.neighbour.getUniqueId(), "coowner"));
+            byte[] snapshot = {0, 7, -1};
+            repo.upsertSnapshots(Map.of(animal.uuid(), snapshot), 73);
+            var connection = repo.ownershipDatabase().getConnection();
+            UUID death = UUID.randomUUID();
+            var before = heldState(connection, animal.uuid(), death);
+            UnsafeValues unsafe = mock(UnsafeValues.class);
+            Entity wrong = mock(Entity.class);
+            when(wrong.getUniqueId()).thenReturn(UUID.randomUUID());
+            when(unsafe.deserializeEntity(any(byte[].class), eq(farm.world), eq(true))).thenAnswer(call -> {
+                return switch (failure) {
+                    case EXCEPTION -> throw new IllegalStateException("Cannot deserialize snapshot");
+                    case NULL_ENTITY -> null;
+                    case WRONG_UUID -> wrong;
+                };
+            });
+            try (var scan = new HusbandryRuntimeCoverageTest.Scan(
+                    new HusbandryEntityScan.Result(Map.of(), Set.of(), true))) {
+                scan.bukkit.when(Bukkit::getUnsafe).thenReturn(unsafe);
+                HusbandryLocator.scanUnloaded(); scan.background(); scan.apply();
+            }
+
+            assertEquals(before, heldState(connection, animal.uuid(), death));
+            assertArrayEquals(snapshot, repo.getSnapshot(animal.uuid()).orElseThrow().data());
+            assertTrue(HusbandryLocator.isMissing(animal.uuid()));
+            assertEquals(2, repo.listOwners(animal.uuid()).size());
+            verify(repo, never()).deleteAnimal(animal.uuid());
+            verify(repo, never()).deleteSnapshot(animal.uuid());
+        }
+    }
 
     @Test void heldGhostKeepsEverySqliteRowAndScanContinuesWithAccurateCounters() throws Exception {
         try (var farm = new HusbandryRuntimeCoverageTest.Farm(directory)) {
@@ -56,7 +100,8 @@ class HusbandryMaintenanceRegressionTest {
             Logger logger = Bukkit.getLogger(); logger.addHandler(handler);
             try (MockedStatic<HusbandrySnapshots> snapshots = mockStatic(HusbandrySnapshots.class);
                  var scan = new HusbandryRuntimeCoverageTest.Scan(new HusbandryEntityScan.Result(Map.of(), Set.of(), true))) {
-                snapshots.when(() -> HusbandrySnapshots.restore(any(), any(), anyList())).thenReturn(false);
+                snapshots.when(() -> HusbandrySnapshots.restore(any(), any(), anyList()))
+                        .thenReturn(HusbandrySnapshots.RestoreResult.SKIPPED);
                 HusbandryLocator.scanUnloaded(); scan.background(); assertDoesNotThrow(scan::apply);
             } finally { logger.removeHandler(handler); }
             assertEquals(before, heldState(connection, held.uuid(), death));

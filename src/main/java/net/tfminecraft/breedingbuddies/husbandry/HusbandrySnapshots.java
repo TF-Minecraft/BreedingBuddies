@@ -23,6 +23,8 @@ import net.tfminecraft.tlibs.database.SqliteDatabaseException;
  */
 public final class HusbandrySnapshots {
 
+    enum RestoreResult { SKIPPED, SCHEDULED, FAILED }
+
     private HusbandrySnapshots() {}
 
     public static boolean shouldCapture(HusbandryAnimal animal) {
@@ -65,21 +67,26 @@ public final class HusbandrySnapshots {
 
     /**
      * Spawns a lost animal from its snapshot at the place it was captured.
-     * Returns false when there is nothing to restore from, so the caller falls back to dropping it.
+     * SKIPPED means restoration is disabled or there is no snapshot. FAILED preserves the records for
+     * retry or staff review; SCHEDULED means the snapshot is waiting for its chunk to load.
      */
     @SuppressWarnings("deprecation")
-    static boolean restore(HusbandryRepository repository, HusbandryAnimal animal, List<HusbandryOwner> owners) {
-        if (!HusbandryConfig.restoreLostAnimals() || repository == null || animal == null
-                || BreedingBuddies.plugin == null) {
-            return false;
+    static RestoreResult restore(HusbandryRepository repository, HusbandryAnimal animal, List<HusbandryOwner> owners) {
+        if (repository == null || animal == null || BreedingBuddies.plugin == null) {
+            return RestoreResult.FAILED;
         }
-        World world = animal.world() == null ? null : Bukkit.getWorld(animal.world());
-        if (world == null) {
-            return false;
+        if (!HusbandryConfig.restoreLostAnimals()) {
+            return RestoreResult.SKIPPED;
         }
         Optional<HusbandrySnapshot> snapshot = repository.getSnapshot(animal.uuid());
         if (snapshot.isEmpty()) {
-            return false;
+            return RestoreResult.SKIPPED;
+        }
+        World world = animal.world() == null ? null : Bukkit.getWorld(animal.world());
+        if (world == null) {
+            Bukkit.getLogger().severe("[BreedingBuddies] Snapshot of " + animal.uuid()
+                    + " has no loaded world to restore into; records kept for staff review.");
+            return RestoreResult.FAILED;
         }
         Entity entity;
         try {
@@ -87,10 +94,12 @@ public final class HusbandrySnapshots {
         } catch (RuntimeException ex) {
             Bukkit.getLogger().severe("[BreedingBuddies] Could not read the snapshot of " + animal.uuid()
                     + ": " + ex.getMessage());
-            return false;
+            return RestoreResult.FAILED;
         }
         if (entity == null || !entity.getUniqueId().equals(animal.uuid())) {
-            return false;
+            Bukkit.getLogger().severe("[BreedingBuddies] Snapshot of " + animal.uuid()
+                    + " does not contain the expected entity; records kept for staff review.");
+            return RestoreResult.FAILED;
         }
         Location at = entity.getLocation();
         at.setWorld(world);
@@ -108,7 +117,7 @@ public final class HusbandrySnapshots {
                 finish(animal, owners, entity, at, snapshot.get().savedAt());
             });
         });
-        return true;
+        return RestoreResult.SCHEDULED;
     }
 
     static void finish(HusbandryAnimal animal, List<HusbandryOwner> owners, Entity entity, Location at, long savedAt) {
