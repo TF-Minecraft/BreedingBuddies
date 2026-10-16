@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -19,13 +18,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.event.world.EntitiesUnloadEvent;
-import org.bukkit.persistence.PersistentDataType;
 
 import net.tfminecraft.tlibs.database.SqliteDatabaseException;
 
 public final class HusbandryLifecycleListener implements Listener {
-
-    private static final NamespacedKey COMPANION_PET = new NamespacedKey("companionpets", "pet");
 
     @EventHandler
     public void onEntitiesLoad(EntitiesLoadEvent event) {
@@ -154,7 +150,7 @@ public final class HusbandryLifecycleListener implements Listener {
             return;
         }
         // CompanionPets owns these bodies, including when it has not enabled yet at startup.
-        if (entity.getPersistentDataContainer().has(COMPANION_PET, PersistentDataType.STRING)) {
+        if (HusbandryEntities.isCompanionPet(entity)) {
             return;
         }
         HusbandryRepository repository = HusbandryEntities.repository();

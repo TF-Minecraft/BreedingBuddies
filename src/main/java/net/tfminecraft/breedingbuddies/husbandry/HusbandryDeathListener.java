@@ -15,6 +15,10 @@ public final class HusbandryDeathListener implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
+        // CompanionPets decides what its pets drop; they are not unowned livestock.
+        if (HusbandryEntities.isCompanionPet(entity)) {
+            return;
+        }
         HusbandryRepository repository = HusbandryEntities.repository();
         if (repository == null) {
             return;

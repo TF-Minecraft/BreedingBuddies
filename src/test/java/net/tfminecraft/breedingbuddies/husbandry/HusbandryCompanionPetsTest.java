@@ -1,17 +1,23 @@
 package net.tfminecraft.breedingbuddies.husbandry;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Tameable;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +70,31 @@ class HusbandryCompanionPetsTest {
         assertEquals(petId, pet.getPersistentDataContainer().get(petKey, PersistentDataType.STRING));
         assertFalse(HusbandryEntities.isManaged(pet));
         assertFalse(farm.repository.exists(pet.getUniqueId()));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = EntityType.class, names = {"WOLF", "CAT"})
+    void companionPetsKeepTheirDropsWhileWildAnimalsLoseThem(EntityType type) {
+        Tameable pet = spawn(type);
+        pet.getPersistentDataContainer().set(
+                new NamespacedKey("companionpets", "pet"), PersistentDataType.STRING, UUID.randomUUID().toString());
+        Tameable wild = spawn(type);
+        HusbandryDeathListener listener = new HusbandryDeathListener();
+
+        EntityDeathEvent petDeath = death(pet);
+        listener.onDeath(petDeath);
+        EntityDeathEvent wildDeath = death(wild);
+        listener.onDeath(wildDeath);
+
+        assertEquals(List.of(new ItemStack(Material.STRING)), petDeath.getDrops());
+        assertEquals(5, petDeath.getDroppedExp());
+        assertTrue(wildDeath.getDrops().isEmpty(), "Untagged wild animals still follow remove-unowned");
+        assertEquals(0, wildDeath.getDroppedExp());
+    }
+
+    private static EntityDeathEvent death(Tameable entity) {
+        return new EntityDeathEvent(entity, mock(DamageSource.class),
+                new ArrayList<>(List.of(new ItemStack(Material.STRING))), 5);
     }
 
     private Tameable spawn(EntityType type) {
