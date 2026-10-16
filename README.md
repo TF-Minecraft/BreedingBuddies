@@ -10,18 +10,30 @@ while breeding connects the next generation to the animals they have raised.
 
 - **Animal ownership** — track owned animals and share responsibility through
   co-ownership.
-- **Daily care** — feeding and tending animals increases friendship, with
-  daily records of the attention each animal has received.
+- **Daily care** — feeding hungry animals, brushing dirty ones, and daily
+  petting or riding earns trust, displayed as five hearts.
 - **Inherited traits** — offspring genetics reflect their parents' genetics
-  and friendship, with variation between generations.
+  and trust, with variation between generations.
 - **Mount development** — pass health, movement speed, and jump characteristics
   from parent mounts to their offspring.
-- **Reward bundles** — collect tiered bundles from happy animals, with better
-  tiers for higher friendship and genetics.
-- **Stable chunks** — animals should spend the night in claimed stable chunks
-  with water and room, or they eventually escape.
-- **Farm management** — inspect animal information and farm reports, with
-  ownership checks around breeding and interactions.
+- **Animal products** — collect milk, wool, manure, and other species-specific
+  products, with care and genetics affecting yields.
+- **Farm management** — inspect animal information, share ownership, and find
+  animals with `/animals`, with character ownership and estate inheritance.
+
+## Upgrading to 1.2
+
+Requires Cooking **0.5.1** and TLibs **2.6.0**. Before starting the new version,
+set `enabled: false` in `plugins/Cooking/husbandry.yml`, install BreedingBuddies,
+and create its writable `plugins/BreedingBuddies/Data` directory if the host
+does not allow the server to create plugin folders. Activate the switch with a
+server restart.
+
+The first start copies Cooking's `Data/husbandry.db` and its journal, preserving
+the originals as a backup. Existing Cooking animal and ownership keys remain
+compatible. Settings start from BreedingBuddies' own `config.yml` defaults;
+review them before activation. Staff need `breedingbuddies.admin` for
+`/bb reload`, `/bb spawn`, and `/bb save`.
 
 ## Documentation
 
@@ -33,8 +45,8 @@ Technical documentation is maintained in [TF-Minecraft/Docs](https://github.com/
 
 Run `mvn clean verify` with Java 21 after preparing the pinned plugin
 dependencies, as the Build workflow does. JUnit 5, Mockito, and MockBukkit cover
-ownership, taming, care, breeding, bundles, stable chunks, mount stats, day
-changes, saved data, and the admin commands. Surefire test results are in
+ownership, taming, trust, breeding, products, mount stats, simulation,
+database migration, saved data, and the admin commands. Surefire test results are in
 `target/surefire-reports/`; JaCoCo's HTML and XML reports are in
 `target/site/jacoco/`. The build enforces **100% line coverage** across all
 production classes, with no exclusions, and CI uploads both reports. Branch and

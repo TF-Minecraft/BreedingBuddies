@@ -13,6 +13,7 @@
 
     <properties>
         <tlibs.version>2.6.0</tlibs.version>
+        <cooking.version>0.5.1</cooking.version>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <argLine></argLine>
@@ -24,6 +25,10 @@
             <exclusions><exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion></exclusions>
         </dependency>
         <dependency>
+            <groupId>net.tfminecraft</groupId><artifactId>cooking</artifactId><version>${cooking.version}</version><scope>provided</scope>
+            <exclusions><exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion></exclusions>
+        </dependency>
+        <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>1.21.10-R0.1-SNAPSHOT</version>
@@ -31,14 +36,8 @@
         </dependency>
         <dependency>
             <groupId>local</groupId>
-            <artifactId>json-simple</artifactId>
-            <version>1.1.1-tfmc-4e69696892b8</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>local</groupId>
-            <artifactId>MMOItems</artifactId>
-            <version>6.10.1-SNAPSHOT-tfmc-a37f7789fcdc</version>
+            <artifactId>MMOCore</artifactId>
+            <version>1.13.1-SNAPSHOT-tfmc-81d511d08309</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -63,6 +62,24 @@
             <groupId>org.mockbukkit.mockbukkit</groupId>
             <artifactId>mockbukkit-v1.21</artifactId>
             <version>4.95.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.49.1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.17</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -115,10 +132,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
                 <configuration>
-                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off -Duser.language=en -Duser.country=US</argLine>
                     <failIfNoTests>true</failIfNoTests>
-                    <!-- PluginData stores JSON under plugins/ relative to the server directory. -->
-                    <workingDirectory>${project.build.directory}/test-runtime</workingDirectory>
                 </configuration>
             </plugin>
             <plugin>

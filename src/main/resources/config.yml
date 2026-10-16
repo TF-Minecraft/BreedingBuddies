@@ -1,0 +1,424 @@
+max-animals: 15
+# Trust is shown as five hearts; care-max is full trust.
+care-max: 200
+
+min-loaded: 60s
+decay-grace: 24h
+long-unload-force: 8h
+milk-timer: 20m
+milk-cooldown: 20m
+wool-timer: 4h
+shed-timer: 4h
+shed-chance: 0.15
+# Time between eggs from a loaded, mature, happy chicken.
+egg-timer: 1h
+
+affliction:
+  mean: 6h
+  min: 4h
+  max: 8h
+
+# Trust only grows through an owner's care. A pet is an empty-handed right-click,
+# or riding for mounts, and counts once per pet-cooldown.
+trust:
+  feed: 10
+  glove: 10
+  pet: 5
+  pet-cooldown: 20h
+
+# Neglect costs trust: after decay-grace with Hungry or Dirty, lose this much per interval.
+care:
+  down:
+    interval: 10h
+    amount: 1
+
+grow-up: 1h
+
+profession: farming
+
+exp:
+  min: 6
+  max: 8
+
+initial-genetic-max: 20
+max-genetics: 1000
+# Meat portions from effective genetics, before the closing bone.
+# Poultry raises this floor to two legs and one filet (carve-sequences.yml).
+min-roast-cuts: 1
+# Bump this string to wild-reset animals with a missing or old id (genetics + care).
+stats-revision: "1"
+# Respawn an owned animal from its last snapshot when a crash or forced stop loses it from the world save.
+restore-lost-animals: true
+
+breeding:
+  # Bigger = larger gene bump per generation.
+  genetic-variance-multiplier: 0.2
+  # Bigger = slower climb when parents already have high genetics.
+  genetic-slowdown-divisor: 0.6
+  # Extra gene points at full parent care: this * max-genetics (0.02 -> +20 at 1000).
+  care-influence: 0.02
+  # Breeding-food stars scale that bonus (1★ = 20% … 5★ = 100%, same roll as before).
+  # Universal feed and items with no cooking quality count as a full bonus.
+
+amount-from-genetics:
+  - min: 0
+    roast-cuts: 1
+    wool: 1
+    secondary-extra: 0
+  - min: 125
+    roast-cuts: 2
+    wool: 1
+    secondary-extra: 0
+  - min: 250
+    roast-cuts: 3
+    wool: 1
+    secondary-extra: 0
+  - min: 375
+    roast-cuts: 4
+    wool: 2
+    secondary-extra: 0
+  - min: 500
+    roast-cuts: 5
+    wool: 2
+    secondary-extra: 1
+  - min: 625
+    roast-cuts: 6
+    wool: 3
+    secondary-extra: 1
+  - min: 750
+    roast-cuts: 7
+    wool: 3
+    secondary-extra: 2
+  - min: 875
+    roast-cuts: 8
+    wool: 4
+    secondary-extra: 2
+
+items:
+  tame: m.pets.taming_item
+  co-own: m.pets.coownership_item
+  feed: m.pets.universal_feed
+  glove: m.pets.caring_item
+  neuter: m.pets.neutering_item
+  inspect: ""
+  mount-stats: ""
+
+remove-unowned:
+  - COW
+  - PIG
+  - SHEEP
+  - CHICKEN
+  - GOAT
+  - HORSE
+  - DONKEY
+  - MULE
+  - CAMEL
+  - LLAMA
+  - CAT
+  - OCELOT
+  - WOLF
+
+species:
+  COW:
+    milk: true
+    slaughter:
+      meat: "meat(type=roast;origin=Beef)"
+      drops:
+        mode: counted
+        common:
+          - { path: m.materials.leather, amount: 4, weight: 100 }
+        rare:
+          - { path: m.materials.leather, amount: 8, weight: 20 }
+          - { path: m.materials.rare_leather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_leather, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_leather, amount: 8, weight: 20 }
+          - { path: m.materials.epic_leather, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_leather, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_leather, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_leather, amount: 4, weight: 60 }
+    # Manure for the fields. Swap the path for the server's fertiliser item if it has one.
+    shed:
+      drops:
+        mode: counted
+        common:
+          - { path: v.bone_meal, amount: 2, weight: 100 }
+  PIG:
+    slaughter:
+      meat: "meat(type=roast;origin=Pork)"
+      drops:
+        rare:
+          - { path: "", weight: 97 }
+          - { path: m.currency.enchanted_dust, amount: 2, weight: 3 }
+        epic:
+          - { path: "", weight: 90 }
+          - { path: m.currency.enchanted_dust, amount: 2, weight: 10 }
+        legendary:
+          - { path: "", weight: 80 }
+          - { path: m.currency.enchanted_dust, amount: 2, weight: 20 }
+    # Rooting about, a happy pig sometimes turns something up.
+    shed:
+      drops:
+        rare:
+          - { path: "", weight: 97 }
+          - { path: m.currency.enchanted_dust, amount: 1, weight: 3 }
+        epic:
+          - { path: "", weight: 90 }
+          - { path: m.currency.enchanted_dust, amount: 1, weight: 10 }
+        legendary:
+          - { path: "", weight: 80 }
+          - { path: m.currency.enchanted_dust, amount: 1, weight: 20 }
+    
+  SHEEP:
+    slaughter:
+      meat: "meat(type=roast;origin=Mutton)"
+      drops:
+        mode: counted
+        common:
+          - { path: v.white_wool, amount: 4, weight: 100 }
+        rare:
+          - { path: v.white_wool, amount: 8, weight: 20 }
+          - { path: m.materials.rare_wool, amount: 4, weight: 60 }
+          - { path: m.materials.epic_wool, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_wool, amount: 8, weight: 20 }
+          - { path: m.materials.epic_wool, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_wool, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_wool, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_wool, amount: 4, weight: 60 }
+    shear:
+      drops:
+        mode: counted
+        common:
+          - { path: v.white_wool, amount: 1, weight: 100 }
+        rare:
+          - { path: v.white_wool, amount: 2, weight: 20 }
+          - { path: m.materials.rare_wool, amount: 1, weight: 60 }
+          - { path: m.materials.epic_wool, amount: 1, weight: 20 }
+        epic:
+          - { path: m.materials.rare_wool, amount: 2, weight: 20 }
+          - { path: m.materials.epic_wool, amount: 1, weight: 60 }
+          - { path: m.materials.legendary_wool, amount: 1, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_wool, amount: 2, weight: 40 }
+          - { path: m.materials.legendary_wool, amount: 1, weight: 60 }
+  CHICKEN:
+    grow-up: 45m
+    egg: "food(type=egg;origin=Egg;tags=freshness.0:cooked.0)"
+    slaughter:
+      meat: "meat(type=roast;origin=Chicken)"
+      drops:
+        mode: counted
+        common:
+          - { path: v.feather, amount: 4, weight: 100 }
+        rare:
+          - { path: v.feather, amount: 8, weight: 20 }
+          - { path: m.materials.rare_feather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_feather, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_feather, amount: 8, weight: 20 }
+          - { path: m.materials.epic_feather, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_feather, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_feather, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_feather, amount: 4, weight: 60 }
+    # Feathers from moulting.
+    shed:
+      drops:
+        mode: counted
+        common:
+          - { path: v.feather, amount: 1, weight: 100 }
+        rare:
+          - { path: v.feather, amount: 2, weight: 20 }
+          - { path: m.materials.rare_feather, amount: 1, weight: 60 }
+          - { path: m.materials.epic_feather, amount: 1, weight: 20 }
+        epic:
+          - { path: m.materials.rare_feather, amount: 2, weight: 20 }
+          - { path: m.materials.epic_feather, amount: 1, weight: 60 }
+          - { path: m.materials.legendary_feather, amount: 1, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_feather, amount: 2, weight: 40 }
+          - { path: m.materials.legendary_feather, amount: 1, weight: 60 }
+  GOAT:
+    milk: true
+    slaughter:
+      meat: "meat(type=roast;origin=Goat)"
+      drops:
+        mode: counted
+        common:
+          - { path: v.white_wool, amount: 4, weight: 100 }
+        rare:
+          - { path: v.white_wool, amount: 8, weight: 20 }
+          - { path: m.materials.rare_wool, amount: 4, weight: 60 }
+          - { path: m.materials.epic_wool, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_wool, amount: 8, weight: 20 }
+          - { path: m.materials.epic_wool, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_wool, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_wool, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_wool, amount: 4, weight: 60 }
+    shear:
+      drops:
+        mode: counted
+        common:
+          - { path: v.white_wool, amount: 1, weight: 100 }
+        rare:
+          - { path: v.white_wool, amount: 2, weight: 20 }
+          - { path: m.materials.rare_wool, amount: 1, weight: 60 }
+          - { path: m.materials.epic_wool, amount: 1, weight: 20 }
+        epic:
+          - { path: m.materials.rare_wool, amount: 2, weight: 20 }
+          - { path: m.materials.epic_wool, amount: 1, weight: 60 }
+          - { path: m.materials.legendary_wool, amount: 1, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_wool, amount: 2, weight: 40 }
+          - { path: m.materials.legendary_wool, amount: 1, weight: 60 }
+  HORSE:
+    slaughter:
+      meat: "meat(type=roast;origin=Horse)"
+      drops:
+        mode: counted
+        common:
+          - { path: m.materials.leather, amount: 4, weight: 100 }
+        rare:
+          - { path: m.materials.leather, amount: 8, weight: 20 }
+          - { path: m.materials.rare_leather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_leather, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_leather, amount: 8, weight: 20 }
+          - { path: m.materials.epic_leather, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_leather, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_leather, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_leather, amount: 4, weight: 60 }
+  DONKEY:
+    slaughter:
+      meat: "meat(type=roast;origin=Donkey)"
+      drops:
+        mode: counted
+        common:
+          - { path: m.materials.leather, amount: 4, weight: 100 }
+        rare:
+          - { path: m.materials.leather, amount: 8, weight: 20 }
+          - { path: m.materials.rare_leather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_leather, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_leather, amount: 8, weight: 20 }
+          - { path: m.materials.epic_leather, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_leather, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_leather, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_leather, amount: 4, weight: 60 }
+  MULE:
+    slaughter:
+      meat: "meat(type=roast;origin=Mule)"
+      drops:
+        mode: counted
+        common:
+          - { path: m.materials.leather, amount: 4, weight: 100 }
+        rare:
+          - { path: m.materials.leather, amount: 8, weight: 20 }
+          - { path: m.materials.rare_leather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_leather, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_leather, amount: 8, weight: 20 }
+          - { path: m.materials.epic_leather, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_leather, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_leather, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_leather, amount: 4, weight: 60 }
+  CAMEL:
+    slaughter:
+      meat: "meat(type=roast;origin=Camel)"
+      drops:
+        mode: counted
+        common:
+          - { path: m.materials.leather, amount: 4, weight: 100 }
+        rare:
+          - { path: m.materials.leather, amount: 8, weight: 20 }
+          - { path: m.materials.rare_leather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_leather, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_leather, amount: 8, weight: 20 }
+          - { path: m.materials.epic_leather, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_leather, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_leather, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_leather, amount: 4, weight: 60 }
+  LLAMA:
+    slaughter:
+      meat: "meat(type=roast;origin=Llama)"
+      drops:
+        mode: counted
+        common:
+          - { path: m.materials.leather, amount: 4, weight: 100 }
+        rare:
+          - { path: m.materials.leather, amount: 8, weight: 20 }
+          - { path: m.materials.rare_leather, amount: 4, weight: 60 }
+          - { path: m.materials.epic_leather, amount: 2, weight: 20 }
+        epic:
+          - { path: m.materials.rare_leather, amount: 8, weight: 20 }
+          - { path: m.materials.epic_leather, amount: 4, weight: 60 }
+          - { path: m.materials.legendary_leather, amount: 2, weight: 20 }
+        legendary:
+          - { path: m.materials.epic_leather, amount: 8, weight: 40 }
+          - { path: m.materials.legendary_leather, amount: 4, weight: 60 }
+
+damage:
+  other-players: true
+  owner: true
+  mobs: true
+  environment: true
+
+quality-from-genetics:
+  - min: 0
+    stars: 1
+  - min: 200
+    stars: 2
+  - min: 400
+    stars: 3
+  - min: 600
+    stars: 4
+  - min: 800
+    stars: 5
+
+mounts:
+  # Every stat (health, speed, jump) is max * (min-pct + genetics-pct * gene + care-pct * trust),
+  # never below the type's minimum. Genes come from breeding; full genes and trust reach the max.
+  # As on TF Main: trust is worth as much as genes.
+  shares:
+    min-pct: 0.40
+    genetics-pct: 0.30
+    care-pct: 0.30
+  # Horse maximums as tuned on TF Main.
+  HORSE:
+    min-health: 10
+    max-health: 27
+    min-speed: 0.0675
+    max-speed: 0.27
+    min-jump: 0.24
+    max-jump: 0.8
+  DONKEY:
+    min-health: 10
+    max-health: 20
+    min-speed: 0.0675
+    max-speed: 0.2025
+    min-jump: 0.24
+    max-jump: 0.6
+  MULE:
+    min-health: 10
+    max-health: 20
+    min-speed: 0.0675
+    max-speed: 0.2025
+    min-jump: 0.24
+    max-jump: 0.6
+  CAMEL:
+    min-health: 20
+    max-health: 20
+    min-speed: 0.054
+    max-speed: 0.054
+    min-jump: 0.4
+    max-jump: 0.4
